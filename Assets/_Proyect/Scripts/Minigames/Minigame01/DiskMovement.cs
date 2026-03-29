@@ -59,6 +59,12 @@ public class DiskMovement : MonoBehaviour
             dodgeDisk.TryHitPlayer(2);
     }
 
+    public void SetDirection(Vector2 newDirection)
+    {
+        direction = newDirection.normalized;
+        rb.linearVelocity = direction * currentSpeed;
+    }
+
     public void Stop()
     {
         moving = false;

@@ -25,6 +25,7 @@ public class PlayerController : MonoBehaviour
     private Rigidbody2D rb;
     private InputAction moveAction;
     private InputAction jumpAction;
+    private InputAction interactAction;
 
     public enum MovementMode { Platform, TopDown }
 
@@ -50,6 +51,7 @@ public class PlayerController : MonoBehaviour
         {
             jumpAction.performed -= OnJump;
             jumpAction.Disable();
+            interactAction?.Disable();
         }
     }
 
@@ -115,6 +117,8 @@ public class PlayerController : MonoBehaviour
 
         moveAction = map.FindAction("Move");
         jumpAction = map.FindAction("Jump");
+        interactAction = map.FindAction("Interact");
+        interactAction?.Enable();
 
         moveAction?.Enable();
         if (jumpAction != null)
@@ -129,5 +133,17 @@ public class PlayerController : MonoBehaviour
         movementMode = mode;
         actionMapName = mapName;
         SetupInput(mapName);
+    }
+
+    public bool GetInteractPressed()
+    {
+        return interactAction != null && interactAction.WasPressedThisFrame();
+    }
+    public void SetFrozen(bool frozen)
+    {
+        if (frozen)
+            rb.linearVelocity = Vector2.zero;
+
+        this.enabled = !frozen;
     }
 }
