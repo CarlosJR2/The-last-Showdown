@@ -12,6 +12,14 @@ public class GameManager : MonoBehaviour
     public int player1Score;
     public int player2Score;
 
+    // Puntos del minijuego actual
+
+    public int player1RoundPoints;
+    public int player2RoundPoints;
+
+    // Modificador de la ruleta
+    public float pointsModifier = 1f;
+
     // Estado del juego
 
     public int currentRound = 1;
@@ -81,6 +89,33 @@ public class GameManager : MonoBehaviour
         player2Score = 0;
         currentRound = 1;
         InitializeMinigames();
+    }
+
+    // Sumar puntos dentro del minijuego
+    public void AddPoints(int player, int points)
+    {
+        if (player == 1) player1RoundPoints += points;
+        else player2RoundPoints += points;
+    }
+
+    // Al terminar el minijuego, aplicar modificador y sumar al total
+    public void FinishMinigame()
+    {
+        int winner = player1RoundPoints > player2RoundPoints ? 1 : 2;
+
+        // Bonus al ganador con modificador
+        int bonus = (int)(BASE_POINTS * pointsModifier);
+        if (winner == 1) player1RoundPoints += bonus;
+        else player2RoundPoints += bonus;
+
+        // Sumar al marcador general
+        player1Score += player1RoundPoints;
+        player2Score += player2RoundPoints;
+
+        // Resetear para el próximo minijuego
+        player1RoundPoints = 0;
+        player2RoundPoints = 0;
+        pointsModifier = 1f;
     }
 
 }
