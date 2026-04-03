@@ -3,13 +3,14 @@ using UnityEngine.SceneManagement;
 
 public class Bootstrap : MonoBehaviour
 {
-    [SerializeField] private string firstScene = "Menu";
+    [SerializeField] private string firstScene = "Minigame_02";
 
-    private void Awake()
+    private void Start()
     {
+        // usando Start en vez de Awake para darle tiempo al GameManager
         if (GameManager.Instance == null)
         {
-            Debug.LogError("GameManager not found. Make sure it exists in the Bootstrap scene.");
+            Debug.LogError("GameManager not found.");
             return;
         }
 

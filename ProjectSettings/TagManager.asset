@@ -7,6 +7,8 @@ TagManager:
   - Player1
   - Player2
   - Ground
+  - Hazards
+  - Spike
   layers:
   - Default
   - TransparentFX
