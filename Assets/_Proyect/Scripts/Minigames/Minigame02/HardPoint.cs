@@ -37,6 +37,8 @@ public class HardPoint : MonoBehaviour
 
     private void OnTriggerExit2D(Collider2D other)
     {
+        Debug.Log("HardPoint detectó: " + other.gameObject.name + " tag: " + other.tag);
+
         if (other.CompareTag("Player1"))
             IsPlayer1Inside = false;
         else if (other.CompareTag("Player2"))

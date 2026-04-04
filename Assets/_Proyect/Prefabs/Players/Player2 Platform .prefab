@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 2193797284578817671}
   m_Layer: 0
   m_Name: 'Player2 Platform '
-  m_TagString: Untagged
+  m_TagString: Player2
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -117,6 +117,7 @@ MonoBehaviour:
   isInvulnerable: 0
   isDead: 0
   canAttack: 1
+  isKnockedBack: 0
 --- !u!50 &569843239741352115
 Rigidbody2D:
   serializedVersion: 5

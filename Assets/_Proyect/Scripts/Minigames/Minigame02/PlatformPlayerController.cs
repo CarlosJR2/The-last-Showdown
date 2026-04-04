@@ -10,10 +10,10 @@ public class PlatformPlayerController : MonoBehaviour
     [SerializeField] private float gravityScale = 3f;
 
     [Header("Golpe")]
-    [SerializeField] private float knockbackForce = 12f;    // fuerza que le aplica al otro
-    [SerializeField] private float selfKnockback = 4f;      // retroceso propio al golpear
-    [SerializeField] private float attackRange = 1.2f;      // rango del golpe
-    [SerializeField] private float attackCooldown = 0.5f;   // tiempo entre golpes
+    [SerializeField] private float knockbackForce = 12f;
+    [SerializeField] private float selfKnockback = 4f;
+    [SerializeField] private float attackRange = 2f;
+    [SerializeField] private float attackCooldown = 0.5f;
 
     [Header("Respawn")]
     [SerializeField] private float respawnDelay = 2f;
@@ -28,6 +28,7 @@ public class PlatformPlayerController : MonoBehaviour
     [SerializeField] private bool isInvulnerable;
     [SerializeField] private bool isDead;
     [SerializeField] private bool canAttack = true;
+    [SerializeField] private bool isKnockedBack = false;
 
     private Rigidbody2D rb;
     private SpriteRenderer sr;
@@ -36,10 +37,7 @@ public class PlatformPlayerController : MonoBehaviour
     private InputAction attackAction;
     private Vector2 moveInput;
 
-    // referencia al otro jugador para aplicar knockback
     private PlatformPlayerController otherPlayer;
-
-    // el manager setea esto cuando cambia de zona
     private Vector3 spawnPoint;
 
     private void Awake()
@@ -112,14 +110,17 @@ public class PlatformPlayerController : MonoBehaviour
         if (isDead) return;
 
         rb.gravityScale = gravityScale;
-        rb.linearVelocity = new Vector2(moveInput.x * moveSpeed, rb.linearVelocity.y);
+
+        // si esta en knockback no sobreescribir la velocidad
+        if (!isKnockedBack)
+            rb.linearVelocity = new Vector2(moveInput.x * moveSpeed, rb.linearVelocity.y);
     }
 
     // --- SALTO ---
 
     private void OnJump(InputAction.CallbackContext context)
     {
-        if (isDead) return;
+        if (isDead || isKnockedBack) return;
         if (isGrounded)
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
     }
@@ -134,15 +135,14 @@ public class PlatformPlayerController : MonoBehaviour
 
         if (distancia <= attackRange)
         {
-            // direccion del golpe (siempre horizontal)
-            Vector2 dir = (otherPlayer.transform.position - transform.position).normalized;
-            dir.y = 0.2f; // leve impulso hacia arriba para que vuele un poco
+            float dirX = otherPlayer.transform.position.x > transform.position.x ? 1f : -1f;
+            Vector2 knockDir = new Vector2(dirX, 0.3f).normalized;
 
-            // aplicar knockback al otro
-            otherPlayer.ReceiveKnockback(dir);
+            otherPlayer.ReceiveKnockback(knockDir);
 
             // retroceso propio
-            rb.AddForce(-dir * selfKnockback, ForceMode2D.Impulse);
+            rb.linearVelocity = new Vector2(-dirX * selfKnockback, selfKnockback * 0.3f);
+            StartCoroutine(KnockbackDuration());
 
             StartCoroutine(AttackCooldown());
         }
@@ -151,8 +151,15 @@ public class PlatformPlayerController : MonoBehaviour
     public void ReceiveKnockback(Vector2 direction)
     {
         if (isInvulnerable) return;
-        rb.linearVelocity = Vector2.zero;
-        rb.AddForce(direction * knockbackForce, ForceMode2D.Impulse);
+        rb.linearVelocity = direction * knockbackForce;
+        StartCoroutine(KnockbackDuration());
+    }
+
+    private IEnumerator KnockbackDuration()
+    {
+        isKnockedBack = true;
+        yield return new WaitForSeconds(0.3f);
+        isKnockedBack = false;
     }
 
     private IEnumerator AttackCooldown()
@@ -189,19 +196,18 @@ public class PlatformPlayerController : MonoBehaviour
     private IEnumerator Die()
     {
         isDead = true;
+        isKnockedBack = false;
         rb.linearVelocity = Vector2.zero;
         rb.gravityScale = 0f;
         sr.enabled = false;
 
         yield return new WaitForSeconds(respawnDelay);
 
-        // volver al spawn de la zona actual
         transform.position = spawnPoint;
         rb.gravityScale = gravityScale;
         sr.enabled = true;
         isDead = false;
 
-        // invulnerabilidad breve al respawnear
         StartCoroutine(Invulnerable());
     }
 
@@ -221,9 +227,8 @@ public class PlatformPlayerController : MonoBehaviour
         isInvulnerable = false;
     }
 
-    // --- METODOS PUBLICOS PARA EL MANAGER ---
+    // --- METODOS PUBLICOS ---
 
-    // el manager llama esto cuando cambia de zona
     public void SetSpawnPoint(Vector3 point)
     {
         spawnPoint = point;
