@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class GameManager : MonoBehaviour 
 {
     // Singleton
-    public static GameManager Instance;
+    public static GameManager Instance; //se accede desde cualquier script a GameManager y todo lo que tenga adentro mientras sea publico
 
     // Datos de jugadores
 
@@ -31,7 +31,7 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        if (Instance != null && Instance != this) //crea el GameManager si no existe, y si existe lo deja como esta
         {
             Destroy(gameObject);
             return;
@@ -42,12 +42,12 @@ public class GameManager : MonoBehaviour
         InitializeMinigames();
     }
 
-    private void InitializeMinigames()
+    private void InitializeMinigames() //carga todos los minijuegos disponible a la lista availableMinigames
     {
         availableMinigames.Clear();
         playedMinigames.Clear();
 
-        for (int i = 1; i <= TOTAL_ROUNDS; i++)
+        for (int i = 1; i <= TOTAL_ROUNDS; i++) //recorre la lista y la llena
         {
             availableMinigames.Add(i);
         }
@@ -55,7 +55,7 @@ public class GameManager : MonoBehaviour
 
     // Puntos
 
-    public void AddResult(int player, bool won)
+    public void AddResult(int player, bool won) //es posible que este metodo se elimine
     {
         int multiplier = (int)Mathf.Pow(2, currentRound - 1);
         int points = BASE_POINTS * multiplier;
@@ -73,17 +73,17 @@ public class GameManager : MonoBehaviour
 
     public bool IsGameOver()
     {
-        return currentRound > TOTAL_ROUNDS;
+        return currentRound > TOTAL_ROUNDS; //va a ser true cuando las rondas actuales superen a las totales (11 > 10)
     }
 
-    public void EndRound(int minigameId)
+    public void EndRound(int minigameId) // se llama para agregar un minijuego a la lista de jugados y removerlo de la lista de disponibles
     {
         playedMinigames.Add(minigameId);
         availableMinigames.Remove(minigameId);
         currentRound++;
     }
 
-    public void ResetGame()
+    public void ResetGame() //se llama para para resetear
     {
         player1Score = 0;
         player2Score = 0;
@@ -92,7 +92,9 @@ public class GameManager : MonoBehaviour
     }
 
     // Sumar puntos dentro del minijuego
-    public void AddPoints(int player, int points)
+    public void AddPoints(int player, int points) //se usa para chequear quien gano los puntos, por ejemplo,
+                                                  //si el P1 agarra una moneda se llamaria a este metodo asi: GameManager.Instance.AddPoints(1,1),
+                                                  //y el valor de puntos se guarda en la cantidad de puntos en la ronda, todavia no en la de puntos globales
     {
         if (player == 1) player1RoundPoints += points;
         else player2RoundPoints += points;
@@ -101,11 +103,11 @@ public class GameManager : MonoBehaviour
     // Al terminar el minijuego, aplicar modificador y sumar al total
     public void FinishMinigame()
     {
-        int winner = player1RoundPoints > player2RoundPoints ? 1 : 2;
+        int winner = player1RoundPoints > player2RoundPoints ? 1 : 2; //Si hay empate va a ganar el P2
 
         // Bonus al ganador con modificador
-        int bonus = (int)(BASE_POINTS * pointsModifier);
-        if (winner == 1) player1RoundPoints += bonus;
+        int bonus = (int)(BASE_POINTS * pointsModifier); //se determina cuanto valen los puntos dependiendo si la ruleta dijo que valen doble o no
+        if (winner == 1) player1RoundPoints += bonus; //se agregan los puntos a fin del minijuego dependiendo que dijo la ruleta
         else player2RoundPoints += bonus;
 
         // Sumar al marcador general

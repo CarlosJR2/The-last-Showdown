@@ -4,11 +4,11 @@ using UnityEngine.SceneManagement;
 public class SceneLoader : MonoBehaviour
 {
   
-    public static SceneLoader Instance;
+    public static SceneLoader Instance; //es un singletone, todos pueden acceder
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        if (Instance != null && Instance != this) //se crea si no esta o se deja como esta
         {
             Destroy(gameObject);
             return;

@@ -34,7 +34,7 @@ public class DiskMovement : MonoBehaviour
     {
         direction = Random.insideUnitCircle.normalized;
 
-        while (Mathf.Abs(direction.x) < 0.2f || Mathf.Abs(direction.y) < 0.2f)
+        while (Mathf.Abs(direction.x) < 0.2f || Mathf.Abs(direction.y) < 0.2f) //se asegura que no se lance de forma horizontal, asi saliendo de forma inclinada
         {
             direction = Random.insideUnitCircle.normalized;
         }
@@ -47,7 +47,14 @@ public class DiskMovement : MonoBehaviour
     private void OnCollisionEnter2D(Collision2D collision)
     {
         Vector2 normal = collision.contacts[0].normal;
-        direction = Vector2.Reflect(direction, normal).normalized;
+        direction = Vector2.Reflect(direction, normal).normalized; //rebota y se normaliza
+
+        // TRUCO: Si la dirección en algún eje es casi 0, le damos un empujoncito
+        // para evitar que se quede pegado o rebote perfectamente recto.
+        if (Mathf.Abs(direction.x) < 0.1f) direction.x += (direction.x > 0 ? 0.1f : -0.1f);
+        if (Mathf.Abs(direction.y) < 0.1f) direction.y += (direction.y > 0 ? 0.1f : -0.1f);
+
+        direction = direction.normalized;
         rb.linearVelocity = direction * currentSpeed;
     }
 

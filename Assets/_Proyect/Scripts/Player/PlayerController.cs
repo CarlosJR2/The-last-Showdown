@@ -15,8 +15,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private MovementMode movementMode = MovementMode.Platform;
 
     [Header("Input")]
-    [SerializeField] private InputActionAsset inputActions;
-    [SerializeField] private string actionMapName = "Player1_Platform";
+    [SerializeField] private InputActionAsset inputActions; //Es el archivo donde están guardados la configuracion de botones
+    [SerializeField] private string actionMapName = "Player1_Platform"; //se pasa por un string cual InputActionAsset se va a usar
 
     [Header("Debug")]
     [SerializeField] private bool isGrounded;
@@ -27,7 +27,7 @@ public class PlayerController : MonoBehaviour
     private InputAction jumpAction;
     private InputAction interactAction;
 
-    public enum MovementMode { Platform, TopDown }
+    public enum MovementMode { Platform, TopDown } //se definen dos estados de juego, estilo plataformero o top down
 
     private void Awake()
     {
@@ -41,27 +41,29 @@ public class PlayerController : MonoBehaviour
             Debug.LogError("InputActions no asignado en " + gameObject.name);
             return;
         }
-        SetupInput(actionMapName);
+        SetupInput(actionMapName); //para activar una configuracion de controles, se le pasa a al metodo SetupInput,
+                                   //el string "Player1_Platform"
     }
 
     private void OnDisable()
     {
-        moveAction?.Disable();
+        moveAction?.Disable(); //el ?. significa Si existe, ejecútalo"
         if (jumpAction != null)
         {
-            jumpAction.performed -= OnJump;
-            jumpAction.Disable();
-            interactAction?.Disable();
+            jumpAction.performed -= OnJump; // Lo desconecta (-=)
+            jumpAction.Disable(); // desconecta los inputs
+            interactAction?.Disable(); // se desactiva si existe
         }
+        //cuando el jugador salta, ejecutar OnJump()
     }
 
-    private void Update()
+    private void Update() //lectura de input, no mueve al PJ TODAVIA
     {
         if (moveAction == null) return;
-        moveInput = moveAction.ReadValue<Vector2>();
+        moveInput = moveAction.ReadValue<Vector2>(); //devuelve algo como: (1, 0), (-1, 0), (0, 1), (0, -1)
     }
 
-    private void FixedUpdate()
+    private void FixedUpdate() //se fija que modo de input se esta usando
     {
         if (movementMode == MovementMode.Platform)
             HandlePlatformMovement();
@@ -69,22 +71,24 @@ public class PlayerController : MonoBehaviour
             HandleTopDownMovement();
     }
 
-    private void HandlePlatformMovement()
+    private void HandlePlatformMovement() //logica base de un plataformero
     {
-        rb.gravityScale = gravityScale;
-        rb.linearVelocity = new Vector2(moveInput.x * moveSpeed, rb.linearVelocity.y);
+        rb.gravityScale = gravityScale; //hay gravedad
+        rb.linearVelocity = new Vector2(moveInput.x * moveSpeed, rb.linearVelocity.y); 
     }
 
-    private void HandleTopDownMovement()
+    private void HandleTopDownMovement() //logica base de un top down
     {
-        rb.gravityScale = 0f;
+        rb.gravityScale = 0f; //gravedad 0
+        Vector2 normalized = moveInput.normalized; //move input normalizado
         rb.linearVelocity = new Vector2(moveInput.x * topDownSpeed, moveInput.y * topDownSpeed);
+       
     }
 
-    private void OnJump(InputAction.CallbackContext context)
+    private void OnJump(InputAction.CallbackContext context) //maneja el salto
     {
-        if (isGrounded)
-            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+        if (isGrounded) //si esta en el piso
+            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse); //en Vector.up(0 , 1) se le da fueza en Y con un impulso
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -108,7 +112,7 @@ public class PlayerController : MonoBehaviour
             jumpAction.Disable();
         }
 
-        var map = inputActions.FindActionMap(mapName);
+        var map = inputActions.FindActionMap(mapName); //se guarda en un var la busqueda del string mapName: "Player1_Platform"
         if (map == null)
         {
             Debug.LogError("Action Map no encontrado: " + mapName);
@@ -117,18 +121,19 @@ public class PlayerController : MonoBehaviour
 
         moveAction = map.FindAction("Move");
         jumpAction = map.FindAction("Jump");
-        interactAction = map.FindAction("Interact");
-        interactAction?.Enable();
+        interactAction = map.FindAction("Interact"); //Estas deben existir en el Input System
 
-        moveAction?.Enable();
-        if (jumpAction != null)
+        interactAction?.Enable();
+        moveAction?.Enable(); //se activan
+
+        if (jumpAction != null) //si existe
         {
             jumpAction.Enable();
-            jumpAction.performed += OnJump;
+            jumpAction.performed += OnJump; //Cuando presionás salto, llama a OnJump()
         }
     }
 
-    public void SetMovementMode(MovementMode mode, string mapName)
+    public void SetMovementMode(MovementMode mode, string mapName) //Cambia el tipo de movimiento y Cambia los controles
     {
         movementMode = mode;
         actionMapName = mapName;
@@ -137,11 +142,11 @@ public class PlayerController : MonoBehaviour
 
     public bool GetInteractPressed()
     {
-        return interactAction != null && interactAction.WasPressedThisFrame();
+        return interactAction != null && interactAction.WasPressedThisFrame(); //TRUE si el jugador presionó interact en ese frame
     }
     public void SetFrozen(bool frozen)
     {
-        if (frozen)
+        if (frozen) //si esta congelado, el movimiento es (0,0)
             rb.linearVelocity = Vector2.zero;
 
         this.enabled = !frozen;
