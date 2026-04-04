@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 
-public class KingOfHillManager : MonoBehaviour
+public class KingOfHill : MonoBehaviour
 {
     [Header("Configuracion")]
     [SerializeField] private float gameDuration = 120f;
@@ -45,12 +45,29 @@ public class KingOfHillManager : MonoBehaviour
 
     private void Start()
     {
-        // conectar controllers
+        if (GameManager.Instance == null)
+        {
+            GameObject gm = new GameObject("GameManager");
+            gm.AddComponent<GameManager>();
+        }
+            
         p1Controller = player1.GetComponent<PlatformPlayerController>();
         p2Controller = player2.GetComponent<PlatformPlayerController>();
 
         p1Controller.SetOtherPlayer(p2Controller);
         p2Controller.SetOtherPlayer(p1Controller);
+
+        // elegir zona ANTES de llamar StartMinigame
+        // para que los spawns esten seteados cuando los jugadores se inicializan
+        currentZoneIndex = Random.Range(0, zones.Length);
+
+        // setear spawns inmediatamente
+        p1Controller.SetSpawnPoint(player1Spawns[currentZoneIndex].position);
+        p2Controller.SetSpawnPoint(player2Spawns[currentZoneIndex].position);
+
+        // teleport inmediato antes de que corra cualquier fisica
+        player1.transform.position = player1Spawns[currentZoneIndex].position;
+        player2.transform.position = player2Spawns[currentZoneIndex].position;
 
         StartMinigame();
     }
@@ -61,8 +78,8 @@ public class KingOfHillManager : MonoBehaviour
         zoneTimer = zoneChangeDuration;
         gameRunning = true;
 
-        currentZoneIndex = Random.Range(0, zones.Length);
-        ActivateZone(currentZoneIndex, teleport: true);
+        // zona ya elegida en Start, solo activar
+        ActivateZone(currentZoneIndex, teleport: false);
 
         UpdateUI();
     }
@@ -97,6 +114,8 @@ public class KingOfHillManager : MonoBehaviour
 
         bool p1Inside = activePoint.IsPlayer1Inside;
         bool p2Inside = activePoint.IsPlayer2Inside;
+
+        Debug.Log("P1 inside: " + p1Inside + " P2 inside: " + p2Inside);
 
         if (p1Inside && !p2Inside)
         {
@@ -148,7 +167,7 @@ public class KingOfHillManager : MonoBehaviour
             p2Controller.SetSpawnPoint(player2Spawns[index].position);
         }
 
-        zoneCamera.SetZoneCenter(zones[index].position);
+        zoneCamera.SetZoneCenter(zones[index].position, index);
     }
 
     private IEnumerator Flash()
