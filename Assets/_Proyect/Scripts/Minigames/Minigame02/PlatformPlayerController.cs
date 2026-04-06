@@ -9,11 +9,18 @@ public class PlatformPlayerController : MonoBehaviour
     [SerializeField] private float jumpForce = 10f;
     [SerializeField] private float gravityScale = 3f;
 
+    [Header("Ground Check")]
+    [SerializeField] private float groundCheckDistance = 0.2f;
+    [SerializeField] private LayerMask groundLayer;
+
     [Header("Golpe")]
     [SerializeField] private float knockbackForce = 12f;
     [SerializeField] private float selfKnockback = 4f;
     [SerializeField] private float attackRange = 2f;
     [SerializeField] private float attackCooldown = 0.5f;
+
+    [Header("DNA")]
+    public bool hasDNA = false;
 
     [Header("Respawn")]
     [SerializeField] private float respawnDelay = 2f;
@@ -32,6 +39,7 @@ public class PlatformPlayerController : MonoBehaviour
 
     private Rigidbody2D rb;
     private SpriteRenderer sr;
+    private Collider2D col;
     private InputAction moveAction;
     private InputAction jumpAction;
     private InputAction attackAction;
@@ -44,6 +52,7 @@ public class PlatformPlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         sr = GetComponent<SpriteRenderer>();
+        col = GetComponent<Collider2D>();
     }
 
     private void OnEnable()
@@ -103,6 +112,7 @@ public class PlatformPlayerController : MonoBehaviour
         if (isDead) return;
         if (moveAction == null) return;
         moveInput = moveAction.ReadValue<Vector2>();
+        CheckGround();
     }
 
     private void FixedUpdate()
@@ -179,16 +189,19 @@ public class PlatformPlayerController : MonoBehaviour
 
     // --- SUELO ---
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void CheckGround()
     {
-        if (collision.gameObject.CompareTag("Ground"))
-            isGrounded = true;
-    }
+        Vector2 leftOrigin = new Vector2(col.bounds.min.x, col.bounds.min.y);
+        Vector2 rightOrigin = new Vector2(col.bounds.max.x, col.bounds.min.y);
 
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Ground"))
-            isGrounded = false;
+        RaycastHit2D hitLeft = Physics2D.Raycast(leftOrigin, Vector2.down, groundCheckDistance, groundLayer);
+        RaycastHit2D hitRight = Physics2D.Raycast(rightOrigin, Vector2.down, groundCheckDistance, groundLayer);
+
+        isGrounded = hitLeft.collider != null || hitRight.collider != null;
+
+        //Gizmos.color = Color.red;
+        //Gizmos.DrawLine(leftOrigin, leftOrigin + Vector2.down * groundCheckDistance);
+        //Gizmos.DrawLine(rightOrigin, rightOrigin + Vector2.down * groundCheckDistance); dibujar raycast
     }
 
     // --- MUERTE Y RESPAWN ---
@@ -243,5 +256,23 @@ public class PlatformPlayerController : MonoBehaviour
     {
         if (!isDead)
             StartCoroutine(Die());
+    }
+    public void ApplyMoveDebuff(float debuff)
+    {
+        moveSpeed *= debuff;
+    }
+
+    //minijuego Mutant DNA
+    public bool HasDNA()
+    {
+        return hasDNA;
+    }
+    public void PickDNA()
+    {
+        hasDNA = true;
+    }
+    public void DropDNA()
+    {
+        hasDNA = false;
     }
 }

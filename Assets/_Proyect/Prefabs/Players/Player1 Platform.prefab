@@ -105,6 +105,10 @@ MonoBehaviour:
   moveSpeed: 5
   jumpForce: 10
   gravityScale: 3
+  groundCheckDistance: 0.4
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 256
   knockbackForce: 12
   selfKnockback: 4
   attackRange: 1.2
@@ -134,7 +138,7 @@ Rigidbody2D:
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_GravityScale: 0
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 9975ea8f8beb53f4c9f627a09a48351d, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0

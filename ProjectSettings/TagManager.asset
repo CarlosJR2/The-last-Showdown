@@ -9,6 +9,8 @@ TagManager:
   - Ground
   - Hazards
   - Spike
+  - Deposit
+  - DNA
   layers:
   - Default
   - TransparentFX

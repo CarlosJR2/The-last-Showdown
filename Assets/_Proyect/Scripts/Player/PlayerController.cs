@@ -1,10 +1,11 @@
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement")]
-    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float moveSpeed = 5f; public float MoveSpeed => moveSpeed;
     [SerializeField] private float jumpForce = 10f;
     [SerializeField] private float gravityScale = 3f;
 
@@ -61,6 +62,7 @@ public class PlayerController : MonoBehaviour
     {
         if (moveAction == null) return;
         moveInput = moveAction.ReadValue<Vector2>(); //devuelve algo como: (1, 0), (-1, 0), (0, 1), (0, -1)
+
     }
 
     private void FixedUpdate() //se fija que modo de input se esta usando
@@ -91,17 +93,6 @@ public class PlayerController : MonoBehaviour
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse); //en Vector.up(0 , 1) se le da fueza en Y con un impulso
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Ground"))
-            isGrounded = true;
-    }
-
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Ground"))
-            isGrounded = false;
-    }
 
     private void SetupInput(string mapName)
     {
