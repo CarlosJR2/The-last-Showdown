@@ -294,7 +294,6 @@ MonoBehaviour:
   freezeDuration: 3
   wallDuration: 5
   magnetDuration: 3
-  magnetStrength: 5
   player1PowerUp: 0
   player2PowerUp: 0
   player1HasPowerUp: 0
@@ -2435,7 +2434,7 @@ Transform:
   m_GameObject: {fileID: 1669200205}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.22, y: 0.09, z: 0}
+  m_LocalPosition: {x: 0.37, y: -0.35, z: 0}
   m_LocalScale: {x: 22.377142, y: 12.5154, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
