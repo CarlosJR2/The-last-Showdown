@@ -26,6 +26,10 @@ public class KingOfHill : MonoBehaviour
     [Header("Camara")]
     [SerializeField] private ZoneCameraController zoneCamera;
 
+    [Header("PowerUps")]
+    [SerializeField] private PowerUpEffects powerUpEffects;
+    [SerializeField] private PowerUpSpawner powerUpSpawner;
+
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI timerText;
     [SerializeField] private TextMeshProUGUI player1ScoreText;
@@ -43,6 +47,8 @@ public class KingOfHill : MonoBehaviour
     private PlatformPlayerController p1Controller;
     private PlatformPlayerController p2Controller;
 
+    
+
     private void Start()
     {
         if (GameManager.Instance == null)
@@ -50,7 +56,9 @@ public class KingOfHill : MonoBehaviour
             GameObject gm = new GameObject("GameManager");
             gm.AddComponent<GameManager>();
         }
-            
+
+       
+
         p1Controller = player1.GetComponent<PlatformPlayerController>();
         p2Controller = player2.GetComponent<PlatformPlayerController>();
 
@@ -68,6 +76,9 @@ public class KingOfHill : MonoBehaviour
         // teleport inmediato antes de que corra cualquier fisica
         player1.transform.position = player1Spawns[currentZoneIndex].position;
         player2.transform.position = player2Spawns[currentZoneIndex].position;
+
+        p1Controller.SetManager(this);
+        p2Controller.SetManager(this);
 
         StartMinigame();
     }
@@ -162,12 +173,14 @@ public class KingOfHill : MonoBehaviour
             player1.transform.position = player1Spawns[index].position;
             player2.transform.position = player2Spawns[index].position;
 
-            // actualizar spawn point en los controllers
             p1Controller.SetSpawnPoint(player1Spawns[index].position);
             p2Controller.SetSpawnPoint(player2Spawns[index].position);
         }
 
         zoneCamera.SetZoneCenter(zones[index].position, index);
+
+        // avisar al spawner que zona esta activa
+        powerUpSpawner.SetActiveZone(index);
     }
 
     private IEnumerator Flash()
@@ -195,6 +208,34 @@ public class KingOfHill : MonoBehaviour
         }
 
         flashImage.gameObject.SetActive(false);
+    }
+
+    public void ActivatePowerUp(PowerUpPickup.PowerUpType type, PlatformPlayerController user, PlatformPlayerController target)
+    {
+        switch (type)
+        {
+            case PowerUpPickup.PowerUpType.Cage:
+                StartCoroutine(powerUpEffects.ActivateCage(hardPoints[currentZoneIndex].transform));
+                break;
+            case PowerUpPickup.PowerUpType.Shield:
+                StartCoroutine(powerUpEffects.ActivateShield(user));
+                break;
+            case PowerUpPickup.PowerUpType.RemovePlatform:
+                StartCoroutine(powerUpEffects.ActivateRemovePlatform(target));
+                break;
+            case PowerUpPickup.PowerUpType.Hook:
+                StartCoroutine(powerUpEffects.ActivateHook(user, target));
+                break;
+            case PowerUpPickup.PowerUpType.DoubleJump:
+                StartCoroutine(powerUpEffects.ActivateDoubleJump(user));
+                break;
+            case PowerUpPickup.PowerUpType.HeavyGravity:
+                StartCoroutine(powerUpEffects.ActivateHeavyGravity(target));
+                break;
+            case PowerUpPickup.PowerUpType.MirrorControl:
+                StartCoroutine(powerUpEffects.ActivateMirrorControl(user, target));
+                break;
+        }
     }
 
     private void UpdateUI()

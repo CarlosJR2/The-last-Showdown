@@ -6,8 +6,14 @@ public class PlatformPlayerController : MonoBehaviour
 {
     [Header("Movimiento")]
     [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private float jumpForce = 10f;
-    [SerializeField] private float gravityScale = 3f;
+    [SerializeField] private float gravityScale = 4f;
+
+    [Header("Salto")]
+    [SerializeField] private float jumpForce = 12f;
+    [SerializeField] private float jumpCutMultiplier = 0.85f;
+    [SerializeField] private float fallMultiplier = 3f;
+    [SerializeField] private float coyoteTime = 0.15f;
+    [SerializeField] private float jumpBufferTime = 0.12f;
 
     [Header("Ground Check")]
     [SerializeField] private float groundCheckDistance = 0.2f;
@@ -37,16 +43,46 @@ public class PlatformPlayerController : MonoBehaviour
     [SerializeField] private bool canAttack = true;
     [SerializeField] private bool isKnockedBack = false;
 
+    // coyote time
+    private float coyoteTimeCounter;
+    // jump buffer
+    private float jumpBufferCounter;
+    // para saber si el boton de salto esta presionado
+    private bool jumpHeld = false;
+
+    // shield
+    private bool shieldActive = false;
+    private float shieldMultiplier = 1f;
+
+    // doble salto
+    private bool doubleJumpEnabled = false;
+    private bool usedDoubleJump = false;
+
+    // gravedad pesada
+    private bool heavyGravityActive = false;
+    private float heavyGravityValue = 0f;
+
+    // control espejo
+    private bool mirrorActive = false;
+    private PlatformPlayerController mirrorTarget = null;
+
+    // power up
+    [Header("PowerUp")]
+    [SerializeField] private PowerUpPickup.PowerUpType currentPowerUp;
+    [SerializeField] private bool hasPowerUp = false;
+
     private Rigidbody2D rb;
     private SpriteRenderer sr;
     private Collider2D col;
     private InputAction moveAction;
     private InputAction jumpAction;
     private InputAction attackAction;
+    private InputAction interactAction;
     private Vector2 moveInput;
 
     private PlatformPlayerController otherPlayer;
     private Vector3 spawnPoint;
+    private KingOfHill manager;
 
     private void Awake()
     {
@@ -66,7 +102,8 @@ public class PlatformPlayerController : MonoBehaviour
 
         if (jumpAction != null)
         {
-            jumpAction.performed -= OnJump;
+            jumpAction.performed -= OnJumpPerformed;
+            jumpAction.canceled -= OnJumpCanceled;
             jumpAction.Disable();
         }
 
@@ -74,6 +111,12 @@ public class PlatformPlayerController : MonoBehaviour
         {
             attackAction.performed -= OnAttack;
             attackAction.Disable();
+        }
+
+        if (interactAction != null)
+        {
+            interactAction.performed -= OnInteract;
+            interactAction.Disable();
         }
     }
 
@@ -91,13 +134,17 @@ public class PlatformPlayerController : MonoBehaviour
         moveAction = map.FindAction("Move");
         jumpAction = map.FindAction("Jump");
         attackAction = map.FindAction("Attack");
+        interactAction = map.FindAction("Interact");
 
         moveAction?.Enable();
 
         if (jumpAction != null)
         {
             jumpAction.Enable();
-            jumpAction.performed += OnJump;
+            // performed = cuando presionas
+            jumpAction.performed += OnJumpPerformed;
+            // canceled = cuando soltas
+            jumpAction.canceled += OnJumpCanceled;
         }
 
         if (attackAction != null)
@@ -105,37 +152,113 @@ public class PlatformPlayerController : MonoBehaviour
             attackAction.Enable();
             attackAction.performed += OnAttack;
         }
+
+        if (interactAction != null)
+        {
+            interactAction.Enable();
+            interactAction.performed += OnInteract;
+        }
     }
 
     private void Update()
     {
         if (isDead) return;
         if (moveAction == null) return;
+
         moveInput = moveAction.ReadValue<Vector2>();
         CheckGround();
+
+        // coyote time: si estaba en el suelo y se cae, tiene gracia por coyoteTime segundos
+        if (isGrounded)
+        {
+            coyoteTimeCounter = coyoteTime;
+            usedDoubleJump = false;
+        }
+        else
+            coyoteTimeCounter -= Time.deltaTime;
+
+        // jump buffer: si presiona salto antes de tocar el suelo, guarda el input
+        if (jumpBufferCounter > 0f)
+        {
+            jumpBufferCounter -= Time.deltaTime;
+
+            // si toca el suelo dentro del buffer, salta
+            if (isGrounded || coyoteTimeCounter > 0f)
+                ExecuteJump();
+        }
     }
 
     private void FixedUpdate()
     {
         if (isDead) return;
 
-        rb.gravityScale = gravityScale;
+        // gravedad pesada o normal
+        rb.gravityScale = heavyGravityActive ? heavyGravityValue : gravityScale;
 
         // si esta en knockback no sobreescribir la velocidad
         if (!isKnockedBack)
             rb.linearVelocity = new Vector2(moveInput.x * moveSpeed, rb.linearVelocity.y);
+
+        ApplyBetterGravity();
+        ApplyMirrorControl();
     }
 
-    // --- SALTO ---
-
-    private void OnJump(InputAction.CallbackContext context)
+    // gravedad mejorada para game feel
+    private void ApplyBetterGravity()
     {
-        if (isDead || isKnockedBack) return;
-        if (isGrounded)
-            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+        if (rb.linearVelocity.y < 0)
+        {
+            // cayendo: aplicar gravedad extra para caida mas pesada
+            rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.fixedDeltaTime;
+        }
+        else if (rb.linearVelocity.y > 0 && !jumpHeld)
+        {
+            // soltaste el boton mientras subias: cortar el salto
+            rb.linearVelocity = new Vector2(
+                rb.linearVelocity.x,
+                rb.linearVelocity.y * jumpCutMultiplier
+            );
+        }
     }
 
-    // --- GOLPE ---
+    // SALTO
+
+    private void OnJumpPerformed(InputAction.CallbackContext context)
+    {
+        if (isDead) return;
+        jumpHeld = true;
+
+        if (isGrounded || coyoteTimeCounter > 0f)
+        {
+            ExecuteJump();
+            usedDoubleJump = false;
+        }
+        else if (doubleJumpEnabled && !usedDoubleJump)
+        {
+            // doble salto en el aire
+            ExecuteJump();
+            usedDoubleJump = true;
+        }
+        else
+        {
+            // no esta en el suelo, guardar el input en el buffer
+            jumpBufferCounter = jumpBufferTime;
+        }
+    }
+
+    private void OnJumpCanceled(InputAction.CallbackContext context)
+    {
+        jumpHeld = false;
+    }
+
+    private void ExecuteJump()
+    {
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+        coyoteTimeCounter = 0f;
+        jumpBufferCounter = 0f;
+    }
+
+    //  GOLPE
 
     private void OnAttack(InputAction.CallbackContext context)
     {
@@ -161,6 +284,14 @@ public class PlatformPlayerController : MonoBehaviour
     public void ReceiveKnockback(Vector2 direction)
     {
         if (isInvulnerable) return;
+
+        // si tiene escudo devolver knockback al que golpeo
+        if (shieldActive)
+        {
+            otherPlayer.ReceiveKnockback(-direction * shieldMultiplier);
+            return;
+        }
+
         rb.linearVelocity = direction * knockbackForce;
         StartCoroutine(KnockbackDuration());
     }
@@ -179,7 +310,7 @@ public class PlatformPlayerController : MonoBehaviour
         canAttack = true;
     }
 
-    // --- PINCHOS ---
+    //  PINCHOS
 
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -187,17 +318,29 @@ public class PlatformPlayerController : MonoBehaviour
             StartCoroutine(Die());
     }
 
-    // --- SUELO ---
+    //  SUELO
 
     private void CheckGround()
     {
         Vector2 leftOrigin = new Vector2(col.bounds.min.x, col.bounds.min.y);
         Vector2 rightOrigin = new Vector2(col.bounds.max.x, col.bounds.min.y);
 
+        // detectar suelo normal
         RaycastHit2D hitLeft = Physics2D.Raycast(leftOrigin, Vector2.down, groundCheckDistance, groundLayer);
         RaycastHit2D hitRight = Physics2D.Raycast(rightOrigin, Vector2.down, groundCheckDistance, groundLayer);
 
-        isGrounded = hitLeft.collider != null || hitRight.collider != null;
+        // detectar cabeza del otro jugador
+        LayerMask headLayer = 1 << LayerMask.NameToLayer("PlayerHead");
+        RaycastHit2D headLeft = Physics2D.Raycast(leftOrigin, Vector2.down, groundCheckDistance, headLayer);
+        RaycastHit2D headRight = Physics2D.Raycast(rightOrigin, Vector2.down, groundCheckDistance, headLayer);
+
+        bool onGround = hitLeft.collider != null || hitRight.collider != null;
+
+        // ignorar la propia cabeza
+        bool onHead = (headLeft.collider != null && headLeft.collider.transform.root != transform) ||
+                      (headRight.collider != null && headRight.collider.transform.root != transform);
+
+        isGrounded = onGround || onHead;
 
         //Gizmos.color = Color.red;
         //Gizmos.DrawLine(leftOrigin, leftOrigin + Vector2.down * groundCheckDistance);
@@ -240,7 +383,65 @@ public class PlatformPlayerController : MonoBehaviour
         isInvulnerable = false;
     }
 
-    // --- METODOS PUBLICOS ---
+    // POWER UPS
+
+    private void OnInteract(InputAction.CallbackContext context)
+    {
+        UsePowerUp();
+    }
+
+    private void UsePowerUp()
+    {
+        if (!hasPowerUp || manager == null) return;
+        hasPowerUp = false;
+        manager.ActivatePowerUp(currentPowerUp, this, otherPlayer);
+    }
+
+    public bool HasPowerUp() => hasPowerUp;
+
+    public void ReceivePowerUp(PowerUpPickup.PowerUpType type)
+    {
+        currentPowerUp = type;
+        hasPowerUp = true;
+    }
+
+    public void SetShield(bool active, float multiplier)
+    {
+        shieldActive = active;
+        shieldMultiplier = multiplier;
+    }
+
+    public void SetDoubleJump(bool active)
+    {
+        doubleJumpEnabled = active;
+        usedDoubleJump = false;
+    }
+
+    public void SetHeavyGravity(bool active, float gravityValue)
+    {
+        heavyGravityActive = active;
+        heavyGravityValue = gravityValue;
+    }
+
+    public void SetMirrorControl(bool active, PlatformPlayerController target)
+    {
+        mirrorActive = active;
+        mirrorTarget = target;
+    }
+
+    private void ApplyMirrorControl()
+    {
+        if (!mirrorActive || mirrorTarget == null) return;
+        mirrorTarget.ForceMove(moveInput);
+    }
+
+    public void ForceMove(Vector2 input)
+    {
+        if (!isKnockedBack)
+            rb.linearVelocity = new Vector2(input.x * moveSpeed, rb.linearVelocity.y);
+    }
+
+    // METODOS PUBLICOS
 
     public void SetSpawnPoint(Vector3 point)
     {
@@ -252,11 +453,17 @@ public class PlatformPlayerController : MonoBehaviour
         otherPlayer = other;
     }
 
+    public void SetManager(KingOfHill m)
+    {
+        manager = m;
+    }
+
     public void ForceRespawn()
     {
         if (!isDead)
             StartCoroutine(Die());
     }
+
     public void ApplyMoveDebuff(float debuff)
     {
         moveSpeed *= debuff;
