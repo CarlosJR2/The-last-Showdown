@@ -14,15 +14,20 @@ public class PlayerController : MonoBehaviour
 
     [Header("Movement Mode")]
     [SerializeField] private MovementMode movementMode = MovementMode.Platform;
+    [SerializeField] Vector2 moveInput;
+    [SerializeField] Vector2 lastDirection;
 
     [Header("Input")]
     [SerializeField] private InputActionAsset inputActions; //Es el archivo donde están guardados la configuracion de botones
     [SerializeField] private string actionMapName = "Player1_Platform"; //se pasa por un string cual InputActionAsset se va a usar
-
+   
     [Header("Debug")]
     [SerializeField] private bool isGrounded;
-    [SerializeField] private Vector2 moveInput;
+   
+    
 
+
+    private Animator anim;
     private Rigidbody2D rb;
     private InputAction moveAction;
     private InputAction jumpAction;
@@ -32,6 +37,7 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
+        anim= GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
     }
 
@@ -63,6 +69,7 @@ public class PlayerController : MonoBehaviour
         if (moveAction == null) return;
         moveInput = moveAction.ReadValue<Vector2>(); //devuelve algo como: (1, 0), (-1, 0), (0, 1), (0, -1)
 
+        UpdateAnimations(moveInput);
     }
 
     private void FixedUpdate() //se fija que modo de input se esta usando
@@ -141,5 +148,20 @@ public class PlayerController : MonoBehaviour
             rb.linearVelocity = Vector2.zero;
 
         this.enabled = !frozen;
+    }
+    private void UpdateAnimations(Vector2 moveInput)
+    {
+        if (anim == null) return;
+
+        bool isMoving = moveInput.sqrMagnitude > 0.01f;
+        anim.SetBool("isMoving", isMoving);
+
+        anim.SetFloat("MoveX", moveInput.x);
+        anim.SetFloat("MoveY", moveInput.y);
+
+        if (isMoving)
+        {
+            lastDirection = moveInput.normalized;
+        }
     }
 }

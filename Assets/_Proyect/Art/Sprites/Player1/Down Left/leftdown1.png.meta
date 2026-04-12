@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 50f95c9e9cd20b84ea5711aac8c30449
+guid: 414568bba63c3a845936b8d2136ea37f
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2951646715085806483
-    second: Ruleta minigames editada_0
+      213: 1156623688882319336
+    second: leftdown1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Ruleta minigames editada_0
+      name: leftdown1_0
       rect:
         serializedVersion: 2
-        x: 171
-        y: 201
-        width: 938
-        height: 884
+        x: 39
+        y: 42
+        width: 202
+        height: 203
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 39b53238c0b56f820800000000000000
-      internalID: 2951646715085806483
+      spriteID: 8efe1a2fd172d0010800000000000000
+      internalID: 1156623688882319336
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Ruleta minigames editada_0: 2951646715085806483
+      leftdown1_0: 1156623688882319336
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

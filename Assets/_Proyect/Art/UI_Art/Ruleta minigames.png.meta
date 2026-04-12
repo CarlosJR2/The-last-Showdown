@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Ruleta minigames_0: 1969837813407084791
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
