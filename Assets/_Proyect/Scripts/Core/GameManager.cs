@@ -23,7 +23,7 @@ public class GameManager : MonoBehaviour
     // Estado del juego
 
     public int currentRound = 1;
-    public const int TOTAL_ROUNDS = 10;
+    public const int TOTAL_ROUNDS = 3;
     public const int BASE_POINTS = 10;
 
     private List<int> availableMinigames = new List<int>();

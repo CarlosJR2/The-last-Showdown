@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 
 public class Bootstrap : MonoBehaviour
 {
-    [SerializeField] private string firstScene = "Minigame_02";
+    [SerializeField] private string firstScene;
 
     private void Start()
     {
