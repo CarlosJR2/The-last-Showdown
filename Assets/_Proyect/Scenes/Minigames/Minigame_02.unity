@@ -82193,12 +82193,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cagePrefab: {fileID: 335922296695064428, guid: 1764b5f5e69305843a5decd5db9cfdcc, type: 3}
   cageDuration: 3
-  hardPointTransform: {fileID: 0}
   shieldDuration: 4
   shieldKnockbackMultiplier: 3
   platformDisableDuration: 3
+  platformLayer:
+    serializedVersion: 2
+    m_Bits: 1024
   hookSpeed: 15
   hookLine: {fileID: 902704015}
+  hookObstacleLayer:
+    serializedVersion: 2
+    m_Bits: 1024
   doubleJumpDuration: 6
   heavyGravityScale: 15
   heavyGravityDuration: 3
