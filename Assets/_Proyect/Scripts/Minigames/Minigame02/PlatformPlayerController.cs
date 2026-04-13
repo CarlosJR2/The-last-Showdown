@@ -65,6 +65,15 @@ public class PlatformPlayerController : MonoBehaviour
     // control espejo
     private bool mirrorActive = false;
     private PlatformPlayerController mirrorTarget = null;
+    private bool isForcedMove = false;
+    private Vector2 forcedMoveInput = Vector2.zero;
+
+    //Controles Invertidos
+    private bool invertControls = false;
+
+    // jetpack
+    private bool jetpackActive = false;
+    private float jetpackForce = 0f;
 
     // power up
     [Header("PowerUp")]
@@ -168,6 +177,11 @@ public class PlatformPlayerController : MonoBehaviour
         moveInput = moveAction.ReadValue<Vector2>();
         CheckGround();
 
+        if (invertControls)
+        {
+            moveInput = -moveInput;
+        }
+
         // coyote time: si estaba en el suelo y se cae, tiene gracia por coyoteTime segundos
         if (isGrounded)
         {
@@ -195,9 +209,18 @@ public class PlatformPlayerController : MonoBehaviour
         // gravedad pesada o normal
         rb.gravityScale = heavyGravityActive ? heavyGravityValue : gravityScale;
 
+        if (jetpackActive && jumpHeld)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jetpackForce);
+        }
+
         // si esta en knockback no sobreescribir la velocidad
         if (!isKnockedBack)
-            rb.linearVelocity = new Vector2(moveInput.x * moveSpeed, rb.linearVelocity.y);
+        {
+            Vector2 inputToUse = isForcedMove ? forcedMoveInput : moveInput;
+            rb.linearVelocity = new Vector2(inputToUse.x * moveSpeed, rb.linearVelocity.y);
+            isForcedMove = false; // resetear cada frame
+        }
 
         ApplyBetterGravity();
         ApplyMirrorControl();
@@ -235,13 +258,12 @@ public class PlatformPlayerController : MonoBehaviour
         }
         else if (doubleJumpEnabled && !usedDoubleJump)
         {
-            // doble salto en el aire
+            // solo disponible si tiene el power up
             ExecuteJump();
             usedDoubleJump = true;
         }
         else
         {
-            // no esta en el suelo, guardar el input en el buffer
             jumpBufferCounter = jumpBufferTime;
         }
     }
@@ -347,7 +369,7 @@ public class PlatformPlayerController : MonoBehaviour
         //Gizmos.DrawLine(rightOrigin, rightOrigin + Vector2.down * groundCheckDistance); dibujar raycast
     }
 
-    // --- MUERTE Y RESPAWN ---
+    // MUERTE Y RESPAWN 
 
     private IEnumerator Die()
     {
@@ -387,12 +409,18 @@ public class PlatformPlayerController : MonoBehaviour
 
     private void OnInteract(InputAction.CallbackContext context)
     {
+        Debug.Log(gameObject.name + " presiono interact");
         UsePowerUp();
     }
 
     private void UsePowerUp()
     {
-        if (!hasPowerUp || manager == null) return;
+        if (!hasPowerUp || manager == null)
+        {
+            Debug.Log(gameObject.name + " intento usar power up - hasPowerUp: " + hasPowerUp + " manager null: " + (manager == null));
+            return;
+        }
+        Debug.Log(gameObject.name + " usando power up: " + currentPowerUp);
         hasPowerUp = false;
         manager.ActivatePowerUp(currentPowerUp, this, otherPlayer);
     }
@@ -403,6 +431,7 @@ public class PlatformPlayerController : MonoBehaviour
     {
         currentPowerUp = type;
         hasPowerUp = true;
+        Debug.Log(gameObject.name + " recibio power up: " + type);
     }
 
     public void SetShield(bool active, float multiplier)
@@ -433,12 +462,39 @@ public class PlatformPlayerController : MonoBehaviour
     {
         if (!mirrorActive || mirrorTarget == null) return;
         mirrorTarget.ForceMove(moveInput);
+
+        // copiar salto
+        if (jumpHeld)
+            mirrorTarget.ForceJump();
     }
 
     public void ForceMove(Vector2 input)
     {
-        if (!isKnockedBack)
-            rb.linearVelocity = new Vector2(input.x * moveSpeed, rb.linearVelocity.y);
+        isForcedMove = true;
+        forcedMoveInput = input;
+    }
+
+    public void ForceJump()
+    {
+        if (isGrounded)
+            ExecuteJump();
+    }
+
+    public void ForceVelocity(Vector2 velocity)
+    {
+        isForcedMove = true;
+        rb.linearVelocity = velocity;
+    }
+
+    public void SetInvertControls(bool active)
+    {
+        invertControls = active;
+    }
+
+    public void SetJetpack(bool active, float force)
+    {
+        jetpackActive = active;
+        jetpackForce = force;
     }
 
     // METODOS PUBLICOS

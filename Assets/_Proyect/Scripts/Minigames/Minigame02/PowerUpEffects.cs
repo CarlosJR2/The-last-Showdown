@@ -17,6 +17,7 @@ public class PowerUpEffects : MonoBehaviour
 
     [Header("Gancho")]
     [SerializeField] private float hookSpeed = 15f;
+    [SerializeField] private LineRenderer hookLine;
 
     [Header("Doble Salto")]
     [SerializeField] private float doubleJumpDuration = 6f;
@@ -27,6 +28,13 @@ public class PowerUpEffects : MonoBehaviour
 
     [Header("Control Espejo")]
     [SerializeField] private float mirrorDuration = 4f;
+
+    [Header("Invertir Controles")]
+    [SerializeField] private float invertDuration = 4f;
+
+    [Header("Jetpack")]
+    [SerializeField] private float jetpackDuration = 5f;
+    [SerializeField] private float jetpackForce = 8f;
 
     // JAULA 
     public IEnumerator ActivateCage(Transform hardPoint)
@@ -47,14 +55,23 @@ public class PowerUpEffects : MonoBehaviour
     // QUITAR PLATAFORMA
     public IEnumerator ActivateRemovePlatform(PlatformPlayerController target)
     {
-        // buscar la plataforma debajo del target
         Collider2D platform = GetPlatformBelow(target);
 
         if (platform != null)
         {
+            // desactivar renderer tambien para que se vea que desaparecio
+            SpriteRenderer sr = platform.GetComponent<SpriteRenderer>();
             platform.enabled = false;
+            if (sr) sr.enabled = false;
+
             yield return new WaitForSeconds(platformDisableDuration);
+
             platform.enabled = true;
+            if (sr) sr.enabled = true;
+        }
+        else
+        {
+            Debug.Log("No habia plataforma debajo");
         }
     }
 
@@ -63,26 +80,64 @@ public class PowerUpEffects : MonoBehaviour
         Collider2D col = target.GetComponent<Collider2D>();
         Vector2 origin = new Vector2(col.bounds.center.x, col.bounds.min.y);
 
-        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, 1f, LayerMask.GetMask("Ground"));
+        // aumentar distancia y agregar debug
+        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, 3f, LayerMask.GetMask("Ground"));
+
+        Debug.Log("RemovePlatform raycast hit: " + (hit.collider != null ? hit.collider.gameObject.name : "nada"));
+
         return hit.collider;
     }
 
     //  GANCHO 
     public IEnumerator ActivateHook(PlatformPlayerController user, PlatformPlayerController target)
     {
-        // direccion del user al target
-        Vector2 dir = (user.transform.position - target.transform.position).normalized;
-
-        // aplicar fuerza al target hacia el user
-        Rigidbody2D targetRb = target.GetComponent<Rigidbody2D>();
+        // activar linea
+        if (hookLine != null)
+        {
+            hookLine.enabled = true;
+            hookLine.positionCount = 2;
+        }
 
         float elapsed = 0f;
-        float hookTime = 0.3f;
+        float pullTime = 0.6f;
 
-        while (elapsed < hookTime)
+        while (elapsed < pullTime)
         {
-            dir = (user.transform.position - target.transform.position).normalized;
-            targetRb.linearVelocity = dir * hookSpeed;
+            float dist = Vector2.Distance(user.transform.position, target.transform.position);
+            if (dist < 1.5f) break;
+
+            // actualizar visual de la linea
+            if (hookLine != null)
+            {
+                hookLine.SetPosition(0, user.transform.position);
+                hookLine.SetPosition(1, target.transform.position);
+            }
+
+            Vector2 dir = ((Vector2)user.transform.position - (Vector2)target.transform.position).normalized;
+            target.ForceVelocity(dir * hookSpeed);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // desactivar linea
+        if (hookLine != null)
+            hookLine.enabled = false;
+    }
+
+    private IEnumerator PullTarget(PlatformPlayerController user, PlatformPlayerController target)
+    {
+        float elapsed = 0f;
+        float pullTime = 0.4f;
+
+        while (elapsed < pullTime)
+        {
+            // si el target ya llego cerca del user parar
+            if (Vector2.Distance(user.transform.position, target.transform.position) < 1.5f)
+                break;
+
+            Vector2 dir = ((Vector2)user.transform.position - (Vector2)target.transform.position).normalized;
+            target.ForceVelocity(dir * hookSpeed);
             elapsed += Time.deltaTime;
             yield return null;
         }
@@ -110,5 +165,20 @@ public class PowerUpEffects : MonoBehaviour
         user.SetMirrorControl(true, target);
         yield return new WaitForSeconds(mirrorDuration);
         user.SetMirrorControl(false, null);
+    }
+
+    public IEnumerator ActivateInvertControls(PlatformPlayerController target)
+    {
+        target.SetInvertControls(true);
+        yield return new WaitForSeconds(invertDuration);
+        target.SetInvertControls(false);
+    }
+
+    // JETPACK
+    public IEnumerator ActivateJetpack(PlatformPlayerController user)
+    {
+        user.SetJetpack(true, jetpackForce);
+        yield return new WaitForSeconds(jetpackDuration);
+        user.SetJetpack(false, 0f);
     }
 }

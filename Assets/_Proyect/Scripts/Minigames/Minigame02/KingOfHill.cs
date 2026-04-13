@@ -126,8 +126,7 @@ public class KingOfHill : MonoBehaviour
         bool p1Inside = activePoint.IsPlayer1Inside;
         bool p2Inside = activePoint.IsPlayer2Inside;
 
-        Debug.Log("P1 inside: " + p1Inside + " P2 inside: " + p2Inside);
-
+       
         if (p1Inside && !p2Inside)
         {
             pointAccumulator1 += pointsPerSecond * Time.deltaTime;
@@ -234,6 +233,12 @@ public class KingOfHill : MonoBehaviour
                 break;
             case PowerUpPickup.PowerUpType.MirrorControl:
                 StartCoroutine(powerUpEffects.ActivateMirrorControl(user, target));
+                break;
+            case PowerUpPickup.PowerUpType.InvertControls:
+                StartCoroutine(powerUpEffects.ActivateInvertControls(target));
+                break;
+            case PowerUpPickup.PowerUpType.Jetpack:
+                StartCoroutine(powerUpEffects.ActivateJetpack(user));
                 break;
         }
     }

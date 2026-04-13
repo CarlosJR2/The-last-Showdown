@@ -16,7 +16,9 @@ public class PowerUpPickup : MonoBehaviour
         Hook,           // gancho que atrae al otro
         DoubleJump,     // doble salto temporal
         HeavyGravity,   // aumenta gravedad del otro
-        MirrorControl   // copia tu movimiento al rival
+        MirrorControl,  // copia tu movimiento al rival
+        InvertControls, // invierte inputs del rival
+        Jetpack         // volar manteniendo salto
     }
 
     public void Initialize(PowerUpSpawner spawner, Transform spawnPoint)
@@ -35,6 +37,7 @@ public class PowerUpPickup : MonoBehaviour
             PlatformPlayerController player = other.GetComponent<PlatformPlayerController>();
 
             if (player == null) return;
+            if (player.HasPowerUp()) return;
 
             // solo recoger si no tiene uno ya
             if (player.HasPowerUp()) return;
