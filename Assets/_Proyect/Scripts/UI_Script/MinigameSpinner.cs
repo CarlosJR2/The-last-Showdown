@@ -2,100 +2,192 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public class MinigameSpinner : MonoBehaviour
 {
+    [Header("Configuración de Minijuegos")]
+    [SerializeField] private int totalMinigames = 2;
+
     [Header("Configuración Visual")]
     [SerializeField] private float minSpinPower = 40f;
     [SerializeField] private float maxSpinPower = 80f;
-    [SerializeField] private float stopPower = 2f;  // Cuánto rozamiento tiene (Drag)
+    [SerializeField] private float stopPower = 2f;
+
+    [Header("Secciones ya jugadas (X)")]
+    [SerializeField] private GameObject[] playedOverlays;
 
     private Rigidbody2D rb;
-    private Transform tr;
-    private bool hasSpun = false; // Para saber si ya arranco
-    private float t;
+    private bool hasSpun = false;
+    private float stoppedTimer = 0f;
+
+    // Para la corrección suave
+    private bool isCorreecting = false;
+    private float targetAngle = 0f;
+    [SerializeField] private float correctionSpeed = 90f; // grados por segundo
 
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        tr = GetComponent<Transform>();
-        rb.angularDamping = 0.2f; //el rozamiento con el que frena
+        rb.angularDamping = 0.2f;
+        RefreshOverlays();
         SpinIt();
     }
 
     public void SpinIt()
     {
-        //fuerza aleatoria en un rango
         float randomPower = Random.Range(minSpinPower, maxSpinPower);
-        Debug.Log("la spinPower es " +  randomPower);
         rb.AddTorque(randomPower, ForceMode2D.Impulse);
         hasSpun = true;
+        stoppedTimer = 0f;
+        isCorreecting = false;
     }
 
     private void Update()
     {
-        //Mientras esté girando, aplicamos el frenado manual
+        // Si estamos corrigiendo hacia una sección válida
+        if (isCorreecting)
+        {
+            float currentAngle = transform.rotation.eulerAngles.z;
+
+            // Calculamos la diferencia más corta entre ángulo actual y destino
+            float diff = Mathf.DeltaAngle(currentAngle, targetAngle);
+
+            if (Mathf.Abs(diff) < 0.5f)
+            {
+                // Llegamos al destino
+                transform.rotation = Quaternion.Euler(0, 0, targetAngle);
+                isCorreecting = false;
+                ConfirmSelection();
+            }
+            else
+            {
+                // Rotamos suavemente hacia el target
+                float step = correctionSpeed * Time.deltaTime;
+                float newAngle = Mathf.MoveTowardsAngle(currentAngle, targetAngle, step);
+                transform.rotation = Quaternion.Euler(0, 0, newAngle);
+            }
+            return;
+        }
+
+        // Frenado normal
         if (rb.angularVelocity > 0)
         {
-            // Restamos velocidad poco a poco
             rb.angularVelocity -= stopPower * Time.deltaTime;
-
-            // Evitamos que pase a valores negativos
             if (rb.angularVelocity < 0) rb.angularVelocity = 0;
         }
 
-        // 2. Detectar cuando se detiene totalmente
         if (hasSpun && rb.angularVelocity <= 0)
         {
-            t += Time.deltaTime;
-            if (t >= 0.5f)
+            stoppedTimer += Time.deltaTime;
+            if (stoppedTimer >= 0.5f)
             {
+                hasSpun = false;
+                stoppedTimer = 0f;
                 SelectedMinigame();
-                hasSpun = false; // Reset para la próxima vez
-                t = 0;
-                transform.rotation = Quaternion.identity;
             }
         }
     }
 
     private void SelectedMinigame()
     {
-        float angle = transform.rotation.eulerAngles.z;
+        List<int> available = GameManager.Instance.GetAvailableMinigames();
+        if (available.Count == 0) return;
 
-        // 8 minijuegos, cada uno ocupa 45 grados (360 / 8) -> quiero keke
-        int totalSlices = 8;
-        float degreesPerSlice = 360f / totalSlices;
+        float rawAngle = transform.rotation.eulerAngles.z;
+        float angleOffset = 90f;
+        float normalizedAngle = (rawAngle + angleOffset) % 360f;
+        float degreesPerSlice = 360f / totalMinigames;
 
-        int winningIndex = Mathf.FloorToInt(angle / degreesPerSlice); // el minijuego es igual a la division entre tods los angles y en donde puede caer
+        int sectionIndex = Mathf.FloorToInt(normalizedAngle / degreesPerSlice);
+        sectionIndex = Mathf.Clamp(sectionIndex, 0, totalMinigames - 1);
+        int winnerId = sectionIndex + 1;
 
-        Debug.Log("Cayó en la porción número: " + (winningIndex + 1)); // + 1 porque si toca el minijuego 1 para el Index seria la pos 0
+        Debug.Log($"Ángulo: {normalizedAngle:F1}° | Sección: {sectionIndex} | Minijuego: {winnerId}");
 
-        switch (winningIndex) //switch para un futuro 
+        if (GameManager.Instance.IsMinigameAvailable(winnerId))
         {
-            case 1:
-                SceneLoader.Instance.LoadMinigame(01);
-                break;
-            case 2:
-                SceneLoader.Instance.LoadMinigame(01);
-                break;
-            case 3:
-                SceneLoader.Instance.LoadMinigame(01);
-                break;
-            case 4:
-                SceneLoader.Instance.LoadMinigame(01);
-                break;
-            case 5:
-                SceneLoader.Instance.LoadMinigame(02);
-                break;
-            case 6:
-                SceneLoader.Instance.LoadMinigame(02);
-                break;
-            case 7:
-                SceneLoader.Instance.LoadMinigame(02);
-                break;
-            case 8:
-                SceneLoader.Instance.LoadMinigame(02);
-                break;
+            ConfirmSelection();
         }
+        else
+        {
+            Debug.Log($"Minijuego {winnerId} ya jugado -> corrigiendo hacia sección válida...");
+            MoveToNearestAvailable(rawAngle, available);
+        }
+    }
+
+    private void MoveToNearestAvailable(float currentRawAngle, List<int> available)
+    {
+        float degreesPerSlice = 360f / totalMinigames;
+        float angleOffset = 90f;
+        float bestAngle = 0f;
+        float bestDistance = float.MaxValue;
+
+        foreach (int id in available)
+        {
+            // Centro de la sección de este minijuego en ángulo normalizado
+            float sectionCenter = (id - 1) * degreesPerSlice + degreesPerSlice * 0.5f;
+
+            // Convertimos de vuelta a rawAngle (invertimos el offset)
+            float rawTarget = (sectionCenter - angleOffset + 360f) % 360f;
+
+            // Distancia más corta desde el ángulo actual
+            float dist = Mathf.Abs(Mathf.DeltaAngle(currentRawAngle, rawTarget));
+
+            if (dist < bestDistance)
+            {
+                bestDistance = dist;
+                bestAngle = rawTarget;
+            }
+        }
+
+        targetAngle = bestAngle;
+        isCorreecting = true;
+        rb.angularVelocity = 0f; // Paramos el Rigidbody para tomar control manual
+    }
+
+    private void ConfirmSelection()
+    {
+        List<int> available = GameManager.Instance.GetAvailableMinigames(); //devuelve la lista de disponibles
+
+        float rawAngle = transform.rotation.eulerAngles.z;
+        float normalizedAngle = (rawAngle + 90f) % 360f;
+        float degreesPerSlice = 360f / totalMinigames;
+
+        int sectionIndex = Mathf.FloorToInt(normalizedAngle / degreesPerSlice);
+        sectionIndex = Mathf.Clamp(sectionIndex, 0, totalMinigames - 1);
+        int winnerId = sectionIndex + 1;
+
+        Debug.Log("Confirmado: Minijuego {winnerId}");
+        RefreshOverlays();
+        if (GameManager.Instance.IsGameOver())
+        {
+            SceneLoader.Instance.LoadFinalScreen();
+        }
+        else{
+            SceneLoader.Instance.LoadMinigame(winnerId);
+        }       
+    }
+
+    private void RefreshOverlays()
+    {
+        if (playedOverlays == null || playedOverlays.Length == 0) return;
+        List<int> available = GameManager.Instance.GetAvailableMinigames();
+
+        for (int i = 0; i < playedOverlays.Length; i++)
+        {
+            if (playedOverlays[i] == null) continue;
+            bool alreadyPlayed = !available.Contains(i + 1);
+            playedOverlays[i].SetActive(alreadyPlayed);
+            /*if (GameManager.Instance.IsGameOver())
+            {
+                playedOverlays[i].SetActive(!alreadyPlayed);
+                for(int id = 1; id < available.Count; id++)
+                {
+                    available.Add(id);
+                }
+            }*/
+        }
+        
     }
 }

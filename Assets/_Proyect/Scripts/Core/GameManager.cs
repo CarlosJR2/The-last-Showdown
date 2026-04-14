@@ -23,7 +23,7 @@ public class GameManager : MonoBehaviour
     // Estado del juego
 
     public int currentRound = 1;
-    public const int TOTAL_ROUNDS = 3;
+    public const int TOTAL_ROUNDS = 2;
     public const int BASE_POINTS = 10;
 
     private List<int> availableMinigames = new List<int>();
@@ -70,17 +70,26 @@ public class GameManager : MonoBehaviour
     {
         return new List<int>(availableMinigames);
     }
+    public bool IsMinigameAvailable(int id) //para la ruleta
+    {
+        // Verifica si el ID que salió en la ruleta todavía está en la lista de disponibles
+        return availableMinigames.Contains(id);
+    }
+    public int GetPlayedCount() //ruleta
+    {
+        return playedMinigames.Count;
+    }
 
     public bool IsGameOver()
     {
-        return currentRound > TOTAL_ROUNDS; //va a ser true cuando las rondas actuales superen a las totales (11 > 10)
+        return currentRound > TOTAL_ROUNDS; //va a ser true cuando las rondas actuales superen a las totales (3 > 2)
     }
 
     public void EndRound(int minigameId) // se llama para agregar un minijuego a la lista de jugados y removerlo de la lista de disponibles
     {
-        playedMinigames.Add(minigameId);
-        availableMinigames.Remove(minigameId);
-        currentRound++;
+            playedMinigames.Add(minigameId);
+            availableMinigames.Remove(minigameId);
+            currentRound++;
     }
 
     public void ResetGame() //se llama para para resetear

@@ -136,9 +136,8 @@ public class DodgeDisk : MonoBehaviour
     {
         GameManager.Instance.AddResult(1, true);
         GameManager.Instance.AddResult(2, true);
-    }
-
-    private void UpdateUI()
+    }  
+    private void UpdateUI() //genera la ui del minijuego por codigo 
     {
         if (timerText != null)
         {
@@ -148,9 +147,8 @@ public class DodgeDisk : MonoBehaviour
         }
         if (player1ScoreText != null) player1ScoreText.text = "P1: " + GameManager.Instance.player1Score;
         if (player2ScoreText != null) player2ScoreText.text = "P2: " + GameManager.Instance.player2Score;
-    }
-
-    private void EndMinigame()
+    }    
+    public void EndMinigame()
     {
         gameRunning = false;
         diskMovement.Stop();

@@ -252,10 +252,11 @@ public class KingOfHill : MonoBehaviour
             player2ScoreText.text = "P2: " + GameManager.Instance.player2RoundPoints;
     }
 
-    private void EndMinigame()
+    public void EndMinigame()
     {
         gameRunning = false;
         GameManager.Instance.FinishMinigame();
+        GameManager.Instance.EndRound(2);
         SceneLoader.Instance.LoadResults();
     }
 }
