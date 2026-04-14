@@ -51,9 +51,9 @@ public class PlatformPlayerController : MonoBehaviour
     private bool shieldActive = false;
     private float shieldMultiplier = 1f;
 
-    // doble salto
+    // doble salto - solo se activa con el power up
     private bool doubleJumpEnabled = false;
-    private bool usedDoubleJump = false;
+    private bool usedDoubleJump = true; // empieza en true para que no pueda usar sin powerup
 
     // gravedad pesada
     private bool heavyGravityActive = false;
@@ -65,7 +65,7 @@ public class PlatformPlayerController : MonoBehaviour
     private bool isForcedMove = false;
     private Vector2 forcedMoveInput = Vector2.zero;
 
-    // FIX mirror jump: flag procesado en Update con fuerza completa
+    // mirror jump
     private bool mirrorJumpPending = false;
 
     // controles invertidos
@@ -75,7 +75,7 @@ public class PlatformPlayerController : MonoBehaviour
     private bool jetpackActive = false;
     private float jetpackForce = 0f;
 
-    // FIX hook: override de velocidad total
+    // hook: override de velocidad total
     private bool hasRawVelocityOverride = false;
     private Vector2 rawVelocityOverride = Vector2.zero;
 
@@ -145,8 +145,17 @@ public class PlatformPlayerController : MonoBehaviour
 
         if (invertControls) moveInput = -moveInput;
 
-        if (isGrounded) { coyoteTimeCounter = coyoteTime; if (doubleJumpEnabled) usedDoubleJump = false; }
-        else coyoteTimeCounter -= Time.deltaTime;
+        if (isGrounded)
+        {
+            coyoteTimeCounter = coyoteTime;
+            // FIX double jump: solo resetear usedDoubleJump si el powerup esta activo
+            // si no, mantenerlo en true para bloquear el segundo salto
+            if (doubleJumpEnabled) usedDoubleJump = false;
+        }
+        else
+        {
+            coyoteTimeCounter -= Time.deltaTime;
+        }
 
         if (jumpBufferCounter > 0f)
         {
@@ -154,7 +163,6 @@ public class PlatformPlayerController : MonoBehaviour
             if (isGrounded || coyoteTimeCounter > 0f) ExecuteJump();
         }
 
-        // mirror jump: ejecutar con fuerza completa
         if (mirrorJumpPending)
         {
             mirrorJumpPending = false;
@@ -168,7 +176,7 @@ public class PlatformPlayerController : MonoBehaviour
 
         rb.gravityScale = heavyGravityActive ? heavyGravityValue : gravityScale;
 
-        // FIX hook: prioridad maxima, sobreescribe todo
+        // hook: prioridad maxima sobre todo lo demas
         if (hasRawVelocityOverride)
         {
             rb.linearVelocity = rawVelocityOverride;
@@ -207,12 +215,14 @@ public class PlatformPlayerController : MonoBehaviour
         if (isGrounded || coyoteTimeCounter > 0f)
         {
             ExecuteJump();
-            usedDoubleJump = false;
-            // propagar salto al mirror como evento puntual
+            // FIX double jump: NO resetear usedDoubleJump aqui
+            // Update lo resetea solo cuando doubleJumpEnabled=true
+            // si lo reseteamos aqui, un salto normal desde el suelo habilita el double jump
             if (mirrorActive && mirrorTarget != null) mirrorTarget.TriggerMirrorJump();
         }
         else if (doubleJumpEnabled && !usedDoubleJump)
         {
+            // segundo salto: solo disponible con el power up activo
             ExecuteJump();
             usedDoubleJump = true;
             if (mirrorActive && mirrorTarget != null) mirrorTarget.TriggerMirrorJump();
@@ -236,8 +246,8 @@ public class PlatformPlayerController : MonoBehaviour
     private void OnAttack(InputAction.CallbackContext context)
     {
         if (isDead || !canAttack || otherPlayer == null) return;
-        float distancia = Vector2.Distance(transform.position, otherPlayer.transform.position);
-        if (distancia <= attackRange)
+        float dist = Vector2.Distance(transform.position, otherPlayer.transform.position);
+        if (dist <= attackRange)
         {
             float dirX = otherPlayer.transform.position.x > transform.position.x ? 1f : -1f;
             Vector2 knockDir = new Vector2(dirX, 0.3f).normalized;
@@ -278,7 +288,7 @@ public class PlatformPlayerController : MonoBehaviour
 
     private void CheckGround()
     {
-
+        // si esta subiendo, no puede estar en el suelo
         if (rb.linearVelocity.y > 0.1f)
         {
             isGrounded = false;
@@ -297,7 +307,7 @@ public class PlatformPlayerController : MonoBehaviour
 
         bool onGround = hitLeft.collider != null || hitRight.collider != null;
         bool onHead = (headLeft.collider != null && headLeft.collider.transform.root != transform) ||
-                      (headRight.collider != null && headRight.collider.transform.root != transform);
+                        (headRight.collider != null && headRight.collider.transform.root != transform);
 
         isGrounded = onGround || onHead;
     }
@@ -341,10 +351,10 @@ public class PlatformPlayerController : MonoBehaviour
     {
         if (!hasPowerUp || manager == null)
         {
-            Debug.Log(gameObject.name + " intento usar power up - hasPowerUp: " + hasPowerUp + " manager null: " + (manager == null));
+            Debug.Log(gameObject.name + " sin powerup o manager nulo");
             return;
         }
-        Debug.Log(gameObject.name + " usando power up: " + currentPowerUp);
+        Debug.Log(gameObject.name + " usando: " + currentPowerUp);
         hasPowerUp = false;
         manager.ActivatePowerUp(currentPowerUp, this, otherPlayer);
     }
@@ -355,35 +365,36 @@ public class PlatformPlayerController : MonoBehaviour
     {
         currentPowerUp = type;
         hasPowerUp = true;
-        Debug.Log(gameObject.name + " recibio power up: " + type);
+        Debug.Log(gameObject.name + " recibio: " + type);
     }
 
     public void SetShield(bool active, float multiplier) { shieldActive = active; shieldMultiplier = multiplier; }
-    public void SetDoubleJump(bool active) { doubleJumpEnabled = active; usedDoubleJump = false; }
+
+    public void SetDoubleJump(bool active)
+    {
+        doubleJumpEnabled = active;
+        // al activar el powerup: habilitar el segundo salto
+        // al desactivar: bloquearlo de nuevo
+        usedDoubleJump = !active;
+    }
+
     public void SetHeavyGravity(bool active, float gravityValue) { heavyGravityActive = active; heavyGravityValue = gravityValue; }
     public void SetMirrorControl(bool active, PlatformPlayerController target) { mirrorActive = active; mirrorTarget = target; }
-
-    // FIX mirror jump: setar pending, se ejecuta en Update con fuerza completa
     public void TriggerMirrorJump() { mirrorJumpPending = true; }
 
     private void ApplyMirrorControl()
     {
         if (!mirrorActive || mirrorTarget == null) return;
         mirrorTarget.ForceMove(moveInput);
-        // salto va por TriggerMirrorJump, no aqui
     }
 
     public void ForceMove(Vector2 input) { isForcedMove = true; forcedMoveInput = input; }
     public void ForceJump() { if (isGrounded) ExecuteJump(); }
     public void ForceVelocity(Vector2 velocity) { isForcedMove = true; rb.linearVelocity = velocity; }
-
-    // FIX hook: sobreescribe velocidad total sin pasar por logica de movimiento
     public void ForceVelocityRaw(Vector2 velocity) { hasRawVelocityOverride = true; rawVelocityOverride = velocity; }
-
     public void SetInvertControls(bool active) { invertControls = active; }
     public void SetJetpack(bool active, float force) { jetpackActive = active; jetpackForce = force; }
 
-    // Exponer collider para que PowerUpEffects pueda hacer IgnoreCollision
     public Collider2D GetCollider() => col;
     public Rigidbody2D GetRigidbody() => rb;
 
@@ -396,20 +407,16 @@ public class PlatformPlayerController : MonoBehaviour
     public bool HasDNA() => hasDNA;
     public void PickDNA() { hasDNA = true; }
     public void DropDNA() { hasDNA = false; }
-    // mirror jump como coroutine para mantener jumpHeld simulado
-    // sin esto ApplyBetterGravity corta el salto porque jumpHeld=false en el target
+
     private IEnumerator MirrorJumpCoroutine()
     {
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         coyoteTimeCounter = 0f;
         jumpBufferCounter = 0f;
-
-        // simular jumpHeld por un tiempo corto para que la gravedad no corte el salto
-        // el tiempo equivale aproximadamente a la mitad del arco de salto
+        // simular jumpHeld para que ApplyBetterGravity no corte el salto inmediatamente
         bool prevJumpHeld = jumpHeld;
         jumpHeld = true;
         yield return new WaitForSeconds(0.25f);
         jumpHeld = prevJumpHeld;
     }
-
 }

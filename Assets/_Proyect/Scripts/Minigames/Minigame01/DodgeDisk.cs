@@ -4,13 +4,11 @@ using System.Collections;
 
 public class DodgeDisk : MonoBehaviour
 {
-    
     [Header("Minigame Settings")]
     [SerializeField] private float gameDuration = 90f;
     [SerializeField] private float pointInterval = 5f;
     [SerializeField] private float invulnerableTime = 3f;
 
-   
     [Header("References")]
     [SerializeField] private DiskMovement diskMovement;
     [SerializeField] private Collider2D diskCollider;
@@ -22,13 +20,11 @@ public class DodgeDisk : MonoBehaviour
     [SerializeField] private Transform player1SpawnPoint;
     [SerializeField] private Transform player2SpawnPoint;
 
-    
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI timerText;
     [SerializeField] private TextMeshProUGUI player1ScoreText;
     [SerializeField] private TextMeshProUGUI player2ScoreText;
 
-   
     [Header("Debug")]
     [SerializeField] private float gameTimer;
     [SerializeField] private float pointTimer;
@@ -38,7 +34,6 @@ public class DodgeDisk : MonoBehaviour
     [SerializeField] private float invulnTimer2;
     [SerializeField] private bool gameRunning;
 
-   
     private void Start()
     {
         StartMinigame();
@@ -48,7 +43,6 @@ public class DodgeDisk : MonoBehaviour
     {
         gameTimer = gameDuration;
         pointTimer = pointInterval;
-       
         gameRunning = true;
 
         player1.transform.position = player1SpawnPoint.position;
@@ -66,7 +60,6 @@ public class DodgeDisk : MonoBehaviour
         UpdateUI();
     }
 
-    
     private void UpdateTimers()
     {
         gameTimer -= Time.deltaTime;
@@ -83,8 +76,6 @@ public class DodgeDisk : MonoBehaviour
             GivePointsToBothPlayers();
             pointTimer = pointInterval;
         }
-
-      
 
         if (player1Invulnerable)
         {
@@ -107,10 +98,6 @@ public class DodgeDisk : MonoBehaviour
         }
     }
 
-   
-        
-
-
     public void TryHitPlayer(int player)
     {
         if (player == 1 && !player1Invulnerable)
@@ -124,7 +111,6 @@ public class DodgeDisk : MonoBehaviour
             RespawnPlayer(2);
         }
     }
-
 
     private void RespawnPlayer(int player)
     {
@@ -146,14 +132,12 @@ public class DodgeDisk : MonoBehaviour
         }
     }
 
-    
     private void GivePointsToBothPlayers()
     {
         GameManager.Instance.AddResult(1, true);
         GameManager.Instance.AddResult(2, true);
     }
 
-    
     private void UpdateUI()
     {
         if (timerText != null)
@@ -162,24 +146,24 @@ public class DodgeDisk : MonoBehaviour
             int seconds = Mathf.FloorToInt(gameTimer % 60f);
             timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
         }
-
-        if (player1ScoreText != null)
-            player1ScoreText.text = "P1: " + GameManager.Instance.player1Score;
-
-        if (player2ScoreText != null)
-            player2ScoreText.text = "P2: " + GameManager.Instance.player2Score;
+        if (player1ScoreText != null) player1ScoreText.text = "P1: " + GameManager.Instance.player1Score;
+        if (player2ScoreText != null) player2ScoreText.text = "P2: " + GameManager.Instance.player2Score;
     }
 
-    
     private void EndMinigame()
     {
         gameRunning = false;
         diskMovement.Stop();
-        GameManager.Instance.EndRound(1);
+
+        
+        int p1Score = GameManager.Instance.player1Score;
+        int p2Score = GameManager.Instance.player2Score;
+        int winner = p1Score >= p2Score ? 1 : 2; // empate le da la victoria al p1
+        GameManager.Instance.EndRound(winner);
+
         SceneLoader.Instance.LoadResults();
     }
 
- 
     private IEnumerator FlashPlayer(GameObject player)
     {
         SpriteRenderer sr = player.GetComponentInChildren<SpriteRenderer>();

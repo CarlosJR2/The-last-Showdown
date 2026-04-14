@@ -8,9 +8,6 @@ public class PowerUpSpawner : MonoBehaviour
     [SerializeField] private float spawnInterval = 10f;
     [SerializeField] private float respawnDelay = 5f;
 
-    [Header("Spawn Points por zona - mismo orden que las zonas")]
-    [SerializeField] private Transform[][] zoneSpawnPoints;
-
     [System.Serializable]
     public class ZoneSpawnPoints
     {
@@ -18,8 +15,6 @@ public class PowerUpSpawner : MonoBehaviour
     }
 
     [SerializeField] private ZoneSpawnPoints[] zones;
-
-    [Header("Prefab del PowerUp")]
     [SerializeField] private GameObject powerUpPrefab;
 
     private List<Transform> availablePoints = new List<Transform>();
@@ -27,16 +22,17 @@ public class PowerUpSpawner : MonoBehaviour
 
     private void Start()
     {
+        // No iniciar SpawnLoop aqui - KingOfHill llama SetActiveZone antes de que
+        // pasen los primeros 10 segundos, pero igual esperamos a que este seteado
         StartCoroutine(SpawnLoop());
     }
 
-    // el manager llama esto cuando cambia de zona
+    // KingOfHill llama esto al cambiar de zona
     public void SetActiveZone(int zoneIndex)
     {
         currentZoneIndex = zoneIndex;
-
-        // resetear puntos disponibles a los de la zona activa
         availablePoints.Clear();
+        if (zones == null || zoneIndex >= zones.Length) return;
         foreach (Transform point in zones[zoneIndex].points)
             availablePoints.Add(point);
     }
@@ -46,7 +42,6 @@ public class PowerUpSpawner : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(spawnInterval);
-
             if (availablePoints.Count > 0)
                 SpawnPowerUp();
         }
@@ -65,15 +60,26 @@ public class PowerUpSpawner : MonoBehaviour
 
     public void OnPickupCollected(Transform point)
     {
-        StartCoroutine(RespawnPoint(point));
+        StartCoroutine(RespawnPoint(point, currentZoneIndex));
     }
 
-    private IEnumerator RespawnPoint(Transform point)
+    private IEnumerator RespawnPoint(Transform point, int zoneAtPickup)
     {
         yield return new WaitForSeconds(respawnDelay);
 
-        // solo agregar de vuelta si sigue siendo la zona activa
-        if (zones[currentZoneIndex].points.Length > 0)
-            availablePoints.Add(point);
+        
+        // evita agregar puntos de zonas viejas a la zona activa
+        if (currentZoneIndex != zoneAtPickup) yield break;
+
+        // verificar que el punto pertenezca a la zona activa
+        if (zones == null || currentZoneIndex >= zones.Length) yield break;
+        foreach (Transform p in zones[currentZoneIndex].points)
+        {
+            if (p == point)
+            {
+                availablePoints.Add(point);
+                break;
+            }
+        }
     }
 }
