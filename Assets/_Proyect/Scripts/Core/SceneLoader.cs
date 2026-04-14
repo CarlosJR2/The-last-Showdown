@@ -21,15 +21,13 @@ public class SceneLoader : MonoBehaviour
     // LOAD SCENES 
     public void LoadMinigame(int minigameId)
     {
-        string sceneName = "Minigame" + "_" + minigameId.ToString("D2");
+        string sceneName = "Minigame" + "_" + minigameId.ToString();
         SceneManager.LoadScene(sceneName);
     }
-
     public void LoadRuleta()
     {
-        SceneManager.LoadScene("Ruleta");
+        SceneManager.LoadScene("Select_Minigame");
     }
-
     public void LoadResults()
     {
         SceneManager.LoadScene("Results");

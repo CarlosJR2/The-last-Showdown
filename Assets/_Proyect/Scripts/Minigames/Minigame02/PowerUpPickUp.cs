@@ -12,7 +12,6 @@ public class PowerUpPickup : MonoBehaviour
     {
         Cage,           // jaula alrededor del hardpoint
         Shield,         // escudo que devuelve knockback
-        RemovePlatform, // desactiva plataforma del otro
         Hook,           // gancho que atrae al otro
         DoubleJump,     // doble salto temporal
         HeavyGravity,   // aumenta gravedad del otro
@@ -25,30 +24,21 @@ public class PowerUpPickup : MonoBehaviour
     {
         this.spawner = spawner;
         this.spawnPoint = spawnPoint;
-
-        // elegir tipo aleatorio al spawnar
         type = (PowerUpType)Random.Range(0, System.Enum.GetValues(typeof(PowerUpType)).Length);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player1") || other.CompareTag("Player2"))
-        {
-            PlatformPlayerController player = other.GetComponent<PlatformPlayerController>();
+        if (!other.CompareTag("Player1") && !other.CompareTag("Player2")) return;
 
-            if (player == null) return;
-            if (player.HasPowerUp()) return;
+        PlatformPlayerController player = other.GetComponent<PlatformPlayerController>();
+        if (player == null) return;
 
-            // solo recoger si no tiene uno ya
-            if (player.HasPowerUp()) return;
+        // FIX: chequeo duplicado eliminado - solo uno es necesario
+        if (player.HasPowerUp()) return;
 
-            // darle el power up al jugador
-            player.ReceivePowerUp(type);
-
-            // avisar al spawner que este punto quedo libre
-            spawner.OnPickupCollected(spawnPoint);
-
-            Destroy(gameObject);
-        }
+        player.ReceivePowerUp(type);
+        spawner.OnPickupCollected(spawnPoint);
+        Destroy(gameObject);
     }
 }
