@@ -165,7 +165,7 @@ public class MinigameSpinner : MonoBehaviour
             SceneLoader.Instance.LoadFinalScreen();
         }
         else{
-            SceneLoader.Instance.LoadMinigame(winnerId);
+            SceneLoader.Instance.LoadMinigame(winnerId); //se elige el minijuego si currentRound < TOTAL_ROUNDS
         }       
     }
 
@@ -179,14 +179,6 @@ public class MinigameSpinner : MonoBehaviour
             if (playedOverlays[i] == null) continue;
             bool alreadyPlayed = !available.Contains(i + 1);
             playedOverlays[i].SetActive(alreadyPlayed);
-            /*if (GameManager.Instance.IsGameOver())
-            {
-                playedOverlays[i].SetActive(!alreadyPlayed);
-                for(int id = 1; id < available.Count; id++)
-                {
-                    available.Add(id);
-                }
-            }*/
         }
         
     }
