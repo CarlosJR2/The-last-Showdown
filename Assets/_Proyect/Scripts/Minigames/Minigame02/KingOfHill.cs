@@ -213,14 +213,8 @@ public class KingOfHill : MonoBehaviour
     {
         switch (type)
         {
-            case PowerUpPickup.PowerUpType.Cage:
-                StartCoroutine(powerUpEffects.ActivateCage(hardPoints[currentZoneIndex].transform));
-                break;
             case PowerUpPickup.PowerUpType.Shield:
                 StartCoroutine(powerUpEffects.ActivateShield(user));
-                break;
-            case PowerUpPickup.PowerUpType.RemovePlatform:
-                StartCoroutine(powerUpEffects.ActivateRemovePlatform(target));
                 break;
             case PowerUpPickup.PowerUpType.Hook:
                 StartCoroutine(powerUpEffects.ActivateHook(user, target));
@@ -239,6 +233,9 @@ public class KingOfHill : MonoBehaviour
                 break;
             case PowerUpPickup.PowerUpType.Jetpack:
                 StartCoroutine(powerUpEffects.ActivateJetpack(user));
+                break;
+            case PowerUpPickup.PowerUpType.Cage:
+                StartCoroutine(powerUpEffects.ActivateCage(currentZoneIndex)); 
                 break;
         }
     }

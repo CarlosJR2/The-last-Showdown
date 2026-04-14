@@ -7,21 +7,15 @@ public class PowerUpEffects : MonoBehaviour
     [Header("Jaula")]
     [SerializeField] private GameObject cagePrefab;
     [SerializeField] private float cageDuration = 5f;
+    [SerializeField] private GameObject[] cagesByZone;
 
     [Header("Escudo")]
     [SerializeField] private float shieldDuration = 4f;
     [SerializeField] private float shieldKnockbackMultiplier = 3f;
 
-    [Header("Quitar Plataforma")]
-    [SerializeField] private float platformDisableDuration = 3f;
-    // La layer del tilemap (la misma que usa groundLayer en el controller)
-    [SerializeField] private LayerMask platformLayer;
-
     [Header("Gancho")]
     [SerializeField] private float hookSpeed = 15f;
     [SerializeField] private LineRenderer hookLine;
-    // Layer de obstaculos que bloquean el gancho (paredes, plataformas)
-    // Asignar la misma layer que platformLayer + cualquier otra pared
     [SerializeField] private LayerMask hookObstacleLayer;
 
     [Header("Doble Salto")]
@@ -42,11 +36,12 @@ public class PowerUpEffects : MonoBehaviour
     [SerializeField] private float jetpackForce = 8f;
 
     // JAULA 
-    public IEnumerator ActivateCage(Transform hardPoint)
+    public IEnumerator ActivateCage(int zoneIndex)
     {
-        GameObject cage = Instantiate(cagePrefab, hardPoint.position, Quaternion.identity);
+        GameObject cage = cagesByZone[zoneIndex];
+        cage.SetActive(true);
         yield return new WaitForSeconds(cageDuration);
-        Destroy(cage);
+        cage.SetActive(false);
     }
 
     // ESCUDO
@@ -57,81 +52,8 @@ public class PowerUpEffects : MonoBehaviour
         user.SetShield(false, 1f);
     }
 
-    // QUITAR PLATAFORMA
-    // FIX: usa Physics2D.IgnoreCollision entre el jugador y el TilemapCollider
-    // para que el jugador caiga a traves de la plataforma sin romper todo el tilemap
-    public IEnumerator ActivateRemovePlatform(PlatformPlayerController target)
-    {
-        Collider2D playerCol = target.GetCollider();
-        Collider2D platformCol = GetPlatformBelow(target);
-
-        if (platformCol != null)
-        {
-            Rigidbody2D targetRb = target.GetRigidbody();
-
-            // guardar Y de los pies del jugador antes de activar
-            float feetY = playerCol.bounds.min.y;
-
-            // 1) ignorar colision
-            Physics2D.IgnoreCollision(playerCol, platformCol, true);
-
-            // 2) esperar que Unity registre el cambio de colision
-            yield return new WaitForFixedUpdate();
-            yield return new WaitForFixedUpdate();
-
-            // 3) mover SOLO un poquito hacia abajo para sacar al jugador del borde
-            // del CompositeCollider sin que parezca un teleport
-            // el CompositeCollider tiene un borde fino - con 0.15f alcanza
-            target.transform.position += Vector3.down * 0.15f;
-
-            // 4) gravedad normal se encarga del resto, solo asegurar que no este quieto
-            if (targetRb != null && Mathf.Abs(targetRb.linearVelocity.y) < 0.1f)
-                targetRb.linearVelocity = new Vector2(targetRb.linearVelocity.x, -1f);
-
-            // 5) esperar duracion del power up
-            yield return new WaitForSeconds(platformDisableDuration);
-
-            // 6) restaurar: chequear si el jugador esta dentro de la plataforma
-            // con un OverlapPoint en el centro del jugador
-            float waitMax = 3f;
-            float waited = 0f;
-            while (waited < waitMax)
-            {
-                Vector2 center = playerCol.bounds.center;
-                // si no hay overlap en el centro del jugador con la layer de plataforma, es seguro
-                Collider2D overlap = Physics2D.OverlapPoint(center, platformLayer);
-                if (overlap == null)
-                    break;
-                waited += Time.deltaTime;
-                yield return null;
-            }
-
-            yield return new WaitForFixedUpdate();
-            Physics2D.IgnoreCollision(playerCol, platformCol, false);
-        }
-        else
-        {
-            Debug.Log("No habia plataforma debajo del target");
-        }
-    }
-
-    private Collider2D GetPlatformBelow(PlatformPlayerController target)
-    {
-        Collider2D col = target.GetCollider();
-        // origin desde el centro-inferior del jugador
-        Vector2 origin = new Vector2(col.bounds.center.x, col.bounds.min.y);
-
-        // buscar hacia abajo con la layer del tilemap
-        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, 3f, platformLayer);
-
-        Debug.Log("RemovePlatform raycast hit: " + (hit.collider != null ? hit.collider.gameObject.name : "nada"));
-
-        return hit.collider;
-    }
-
     // GANCHO
-    // FIX: chequear linea de vision entre user y target antes de jalar
-    // si hay obstaculo en el medio, el gancho se cancela
+    
     public IEnumerator ActivateHook(PlatformPlayerController user, PlatformPlayerController target)
     {
         // chequear si hay linea de vision libre

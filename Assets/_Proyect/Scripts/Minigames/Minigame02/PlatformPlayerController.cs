@@ -230,6 +230,7 @@ public class PlatformPlayerController : MonoBehaviour
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         coyoteTimeCounter = 0f;
         jumpBufferCounter = 0f;
+        isGrounded = false;
     }
 
     private void OnAttack(InputAction.CallbackContext context)
@@ -277,6 +278,13 @@ public class PlatformPlayerController : MonoBehaviour
 
     private void CheckGround()
     {
+
+        if (rb.linearVelocity.y > 0.1f)
+        {
+            isGrounded = false;
+            return;
+        }
+
         Vector2 leftOrigin = new Vector2(col.bounds.min.x, col.bounds.min.y);
         Vector2 rightOrigin = new Vector2(col.bounds.max.x, col.bounds.min.y);
 

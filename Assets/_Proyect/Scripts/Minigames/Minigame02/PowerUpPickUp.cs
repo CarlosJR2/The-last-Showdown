@@ -12,7 +12,6 @@ public class PowerUpPickup : MonoBehaviour
     {
         Cage,           // jaula alrededor del hardpoint
         Shield,         // escudo que devuelve knockback
-        RemovePlatform, // desactiva plataforma del otro
         Hook,           // gancho que atrae al otro
         DoubleJump,     // doble salto temporal
         HeavyGravity,   // aumenta gravedad del otro
