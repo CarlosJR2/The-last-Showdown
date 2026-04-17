@@ -3645,6 +3645,10 @@ PrefabInstance:
       value: 0.00081817905
       objectReference: {fileID: 0}
     - target: {fileID: 2301863690828031753, guid: f9c6bd4f98b2710489437cf73fc3014a, type: 3}
+      propertyPath: inputActions
+      value: 
+      objectReference: {fileID: -944628639613478452, guid: 2eefc3655699b6b4c94338e68a1d94bb, type: 3}
+    - target: {fileID: 2301863690828031753, guid: f9c6bd4f98b2710489437cf73fc3014a, type: 3}
       propertyPath: movementMode
       value: 1
       objectReference: {fileID: 0}

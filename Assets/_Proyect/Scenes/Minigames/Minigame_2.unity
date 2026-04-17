@@ -90789,7 +90789,7 @@ PrefabInstance:
     - target: {fileID: 3732607951623789684, guid: 905f0265f049b2f4480a10c0a01ef17a, type: 3}
       propertyPath: inputActions
       value: 
-      objectReference: {fileID: -944628639613478452, guid: e3270181fb3993c478a2ddab4e8b288a, type: 3}
+      objectReference: {fileID: -944628639613478452, guid: 2eefc3655699b6b4c94338e68a1d94bb, type: 3}
     - target: {fileID: 3732607951623789684, guid: 905f0265f049b2f4480a10c0a01ef17a, type: 3}
       propertyPath: actionMapName
       value: Player2_Platform
