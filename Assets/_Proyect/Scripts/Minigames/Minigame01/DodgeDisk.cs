@@ -34,6 +34,12 @@ public class DodgeDisk : MonoBehaviour
     [SerializeField] private float invulnTimer2;
     [SerializeField] private bool gameRunning;
 
+    private bool player1UsedPowerUp = false;
+    private bool player2UsedPowerUp = false;
+    private float powerUpKillTimer1 = 0f;
+    private float powerUpKillTimer2 = 0f;
+    private const float POWER_UP_KILL_WINDOW = 5f; // segundos de ventana
+
     private void Start()
     {
         StartMinigame();
@@ -98,20 +104,6 @@ public class DodgeDisk : MonoBehaviour
         }
     }
 
-    public void TryHitPlayer(int player)
-    {
-        if (player == 1 && !player1Invulnerable)
-        {
-            GameManager.Instance.AddResult(1, false);
-            RespawnPlayer(1);
-        }
-        else if (player == 2 && !player2Invulnerable)
-        {
-            GameManager.Instance.AddResult(2, false);
-            RespawnPlayer(2);
-        }
-    }
-
     private void RespawnPlayer(int player)
     {
         if (player == 1)
@@ -148,19 +140,6 @@ public class DodgeDisk : MonoBehaviour
         if (player1ScoreText != null) player1ScoreText.text = "P1: " + GameManager.Instance.player1Score;
         if (player2ScoreText != null) player2ScoreText.text = "P2: " + GameManager.Instance.player2Score;
     }    
-    public void EndMinigame()
-    {
-        gameRunning = false;
-        diskMovement.Stop();
-
-        
-        int p1Score = GameManager.Instance.player1Score;
-        int p2Score = GameManager.Instance.player2Score;
-        int winner = p1Score >= p2Score ? 1 : 2; // empate le da la victoria al p1
-        GameManager.Instance.EndRound(winner);
-
-        SceneLoader.Instance.LoadResults();
-    }
 
     private IEnumerator FlashPlayer(GameObject player)
     {
@@ -177,5 +156,89 @@ public class DodgeDisk : MonoBehaviour
         }
 
         sr.enabled = true;
+    }
+
+    // llamar esto desde PowerUpManager cuando un jugador usa un power up
+    public void NotifyPowerUpUsed(int player)
+    {
+        if (player == 1) { player1UsedPowerUp = true; powerUpKillTimer1 = POWER_UP_KILL_WINDOW; }
+        else { player2UsedPowerUp = true; powerUpKillTimer2 = POWER_UP_KILL_WINDOW; }
+    }
+
+    // en Update, agregar esto al final de UpdateTimers:
+    private void UpdatePowerUpKillTimers()
+    {
+        if (player1UsedPowerUp)
+        {
+            powerUpKillTimer1 -= Time.deltaTime;
+            if (powerUpKillTimer1 <= 0f) player1UsedPowerUp = false;
+        }
+        if (player2UsedPowerUp)
+        {
+            powerUpKillTimer2 -= Time.deltaTime;
+            if (powerUpKillTimer2 <= 0f) player2UsedPowerUp = false;
+        }
+    }
+
+    // TryHitPlayer actualizado con los modificadores
+    public void TryHitPlayer(int player)
+    {
+        if (player == 1 && !player1Invulnerable)
+        {
+            // modificador: morir da puntos al rival
+            if (ModifierManager.Instance != null &&
+                ModifierManager.Instance.activeDDModifier == ModifierManager.DodgeDiskModifier.DeathGivesPoints)
+                GameManager.Instance.AddPoints(2, ModifierManager.Instance.deathGivesPoints);
+
+            // modificador: power up kill bonus (el que golpeo era p2)
+            if (ModifierManager.Instance != null &&
+                ModifierManager.Instance.activeDDModifier == ModifierManager.DodgeDiskModifier.PowerUpKillBonus
+                && player2UsedPowerUp)
+            {
+                GameManager.Instance.AddPoints(2, ModifierManager.Instance.powerUpKillBonusPoints);
+                player2UsedPowerUp = false;
+            }
+
+            GameManager.Instance.RemovePoints(1, 10);
+            RespawnPlayer(1);
+        }
+        else if (player == 2 && !player2Invulnerable)
+        {
+            if (ModifierManager.Instance != null &&
+                ModifierManager.Instance.activeDDModifier == ModifierManager.DodgeDiskModifier.DeathGivesPoints)
+                GameManager.Instance.AddPoints(1, ModifierManager.Instance.deathGivesPoints);
+
+            if (ModifierManager.Instance != null &&
+                ModifierManager.Instance.activeDDModifier == ModifierManager.DodgeDiskModifier.PowerUpKillBonus
+                && player1UsedPowerUp)
+            {
+                GameManager.Instance.AddPoints(1, ModifierManager.Instance.powerUpKillBonusPoints);
+                player1UsedPowerUp = false;
+            }
+
+            GameManager.Instance.RemovePoints(2, 10);
+            RespawnPlayer(2);
+        }
+    }
+
+    // EndMinigame actualizado
+    public void EndMinigame()
+    {
+        gameRunning = false;
+        diskMovement.Stop();
+
+        // modificador winner bonus
+        if (ModifierManager.Instance != null &&
+            ModifierManager.Instance.activeDDModifier == ModifierManager.DodgeDiskModifier.WinnerBonus)
+        {
+            int winner = GameManager.Instance.player1RoundPoints >= GameManager.Instance.player2RoundPoints ? 1 : 2;
+            GameManager.Instance.AddPoints(winner, ModifierManager.Instance.winnerBonusPoints);
+        }
+
+        var (p1Round, p2Round) = GameManager.Instance.FinishMinigame();
+        GameManager.Instance.EndRound(1);
+        PlayerPrefs.SetInt("LastRoundP1", p1Round);
+        PlayerPrefs.SetInt("LastRoundP2", p2Round);
+        SceneLoader.Instance.LoadResults();
     }
 }

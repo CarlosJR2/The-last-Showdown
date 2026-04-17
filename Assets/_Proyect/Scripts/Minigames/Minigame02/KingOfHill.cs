@@ -47,7 +47,10 @@ public class KingOfHill : MonoBehaviour
     private PlatformPlayerController p1Controller;
     private PlatformPlayerController p2Controller;
 
-    
+    private float pointBleedTimer1 = 0f;
+    private float pointBleedTimer2 = 0f;
+    private float[] hardpointTimeInZone = new float[2]; // [0]=p1, [1]=p2
+    private int[] hardpointMultiplier = new int[] { 1, 1 }; // x1 x2 x3 x4
 
     private void Start()
     {
@@ -117,36 +120,6 @@ public class KingOfHill : MonoBehaviour
         }
 
         UpdateUI();
-    }
-
-    private void HandleHardPointPoints()
-    {
-        HardPoint activePoint = hardPoints[currentZoneIndex];
-
-        bool p1Inside = activePoint.IsPlayer1Inside;
-        bool p2Inside = activePoint.IsPlayer2Inside;
-
-       
-        if (p1Inside && !p2Inside)
-        {
-            pointAccumulator1 += pointsPerSecond * Time.deltaTime;
-            if (pointAccumulator1 >= 1f)
-            {
-                int pts = Mathf.FloorToInt(pointAccumulator1);
-                GameManager.Instance.AddPoints(1, pts);
-                pointAccumulator1 -= pts;
-            }
-        }
-        else if (p2Inside && !p1Inside)
-        {
-            pointAccumulator2 += pointsPerSecond * Time.deltaTime;
-            if (pointAccumulator2 >= 1f)
-            {
-                int pts = Mathf.FloorToInt(pointAccumulator2);
-                GameManager.Instance.AddPoints(2, pts);
-                pointAccumulator2 -= pts;
-            }
-        }
     }
 
     private IEnumerator ChangeZone()
@@ -252,11 +225,103 @@ public class KingOfHill : MonoBehaviour
             player2ScoreText.text = "P2: " + GameManager.Instance.player2RoundPoints;
     }
 
+    private void HandleHardPointPoints()
+    {
+        HardPoint activePoint = hardPoints[currentZoneIndex];
+        bool p1Inside = activePoint.IsPlayer1Inside;
+        bool p2Inside = activePoint.IsPlayer2Inside;
+
+        //  PUNTOS BASE POR ZONA 
+        if (p1Inside && !p2Inside)
+        {
+            // calcular multiplicador progresivo si aplica
+            int mult = GetHardpointMultiplier(1);
+            pointAccumulator1 += pointsPerSecond * mult * Time.deltaTime;
+            if (pointAccumulator1 >= 1f)
+            {
+                int pts = Mathf.FloorToInt(pointAccumulator1);
+                GameManager.Instance.AddPoints(1, pts);
+                pointAccumulator1 -= pts;
+            }
+            hardpointTimeInZone[0] = 0f; // p2 no esta
+        }
+        else if (p2Inside && !p1Inside)
+        {
+            int mult = GetHardpointMultiplier(2);
+            pointAccumulator2 += pointsPerSecond * mult * Time.deltaTime;
+            if (pointAccumulator2 >= 1f)
+            {
+                int pts = Mathf.FloorToInt(pointAccumulator2);
+                GameManager.Instance.AddPoints(2, pts);
+                pointAccumulator2 -= pts;
+            }
+            hardpointTimeInZone[1] = 0f;
+        }
+
+        // acumular tiempo en zona para multiplicador progresivo
+        if (p1Inside) hardpointTimeInZone[0] += Time.deltaTime;
+        else hardpointTimeInZone[0] = 0f;
+        if (p2Inside) hardpointTimeInZone[1] += Time.deltaTime;
+        else hardpointTimeInZone[1] = 0f;
+
+        //  POINT BLEED: -1/seg fuera de la zona 
+        if (ModifierManager.Instance != null &&
+            ModifierManager.Instance.activeKOHModifier == ModifierManager.KOHModifier.PointBleed)
+        {
+            // p1: solo sangra si esta FUERA y hay alguien adentro
+            if (!p1Inside && p2Inside)
+            {
+                pointBleedTimer1 += Time.deltaTime;
+                if (pointBleedTimer1 >= 1f)
+                {
+                    GameManager.Instance.RemovePoints(1, ModifierManager.Instance.pointBleedAmount);
+                    pointBleedTimer1 = 0f;
+                }
+            }
+            else pointBleedTimer1 = 0f;
+
+            // p2: mismo
+            if (!p2Inside && p1Inside)
+            {
+                pointBleedTimer2 += Time.deltaTime;
+                if (pointBleedTimer2 >= 1f)
+                {
+                    GameManager.Instance.RemovePoints(2, ModifierManager.Instance.pointBleedAmount);
+                    pointBleedTimer2 = 0f;
+                }
+            }
+            else pointBleedTimer2 = 0f;
+        }
+
+        // recalcular comeback si aplica
+        if (ModifierManager.Instance != null &&
+            ModifierManager.Instance.activeKOHModifier == ModifierManager.KOHModifier.ComebackMultiplier)
+            ModifierManager.Instance.RecalculateComebackMultiplier();
+    }
+
+    // devuelve el multiplicador de tiempo en zona (1,2,3,4)
+    private int GetHardpointMultiplier(int player)
+    {
+        if (ModifierManager.Instance == null ||
+            ModifierManager.Instance.activeKOHModifier != ModifierManager.KOHModifier.ProgressiveHardpoint)
+            return 1;
+
+        float time = hardpointTimeInZone[player - 1];
+        if (time >= 15f) return 4;
+        if (time >= 10f) return 3;
+        if (time >= 5f) return 2;
+        return 1;
+    }
+
+    // EndMinigame actualizado
     public void EndMinigame()
     {
         gameRunning = false;
-        GameManager.Instance.FinishMinigame();
-        GameManager.Instance.EndRound(2);
+        var (p1Round, p2Round) = GameManager.Instance.FinishMinigame();
+        GameManager.Instance.EndRound(2); // id del minijuego
+                                          // guardar para mostrar en Results
+        PlayerPrefs.SetInt("LastRoundP1", p1Round);
+        PlayerPrefs.SetInt("LastRoundP2", p2Round);
         SceneLoader.Instance.LoadResults();
     }
 }
