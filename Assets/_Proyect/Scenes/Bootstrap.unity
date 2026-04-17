@@ -192,7 +192,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2fd243a58a2db154391d5a8f67dcfeb5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  firstScene: Minigame_2
+  firstScene: Select_Minigame
 --- !u!4 &1331520557
 Transform:
   m_ObjectHideFlags: 0
@@ -345,6 +345,57 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!1 &1654707194
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1654707196}
+  - component: {fileID: 1654707195}
+  m_Layer: 0
+  m_Name: ModifierManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1654707195
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1654707194}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a89b04079ab87de43a4aa0f50e7349fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  activeKOHModifier: 0
+  activeDDModifier: 0
+  comebackMultiplier: 3
+  pointBleedAmount: 1
+  powerUpKillBonusPoints: 15
+  deathGivesPoints: 10
+  winnerBonusPoints: 50
+--- !u!4 &1654707196
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1654707194}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -51.17824, y: 36.811993, z: -0.21166717}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1798314758
 GameObject:
   m_ObjectHideFlags: 0
@@ -404,3 +455,4 @@ SceneRoots:
   - {fileID: 1798314759}
   - {fileID: 748783639}
   - {fileID: 1331520557}
+  - {fileID: 1654707196}

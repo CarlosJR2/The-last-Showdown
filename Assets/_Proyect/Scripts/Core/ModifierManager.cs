@@ -4,6 +4,17 @@ public class ModifierManager : MonoBehaviour
 {
     public static ModifierManager Instance;
 
+    [Header("Modificador activo")]
+    public KOHModifier activeKOHModifier = KOHModifier.None;
+    public DodgeDiskModifier activeDDModifier = DodgeDiskModifier.None;
+
+    [Header("Valores configurables")]
+    public float comebackMultiplier = 3f;       // x3 para el que va perdiendo
+    public int pointBleedAmount = 1;            // puntos que se pierden por segundo
+    public int powerUpKillBonusPoints = 15;     // bonus por matar con power up
+    public int deathGivesPoints = 10;           // puntos que le das al rival al morir
+    public int winnerBonusPoints = 50;          // bonus al ganador al final
+
     // modificadores disponibles por minijuego
     public enum MinigameType { DodgeDisk, KingOfHill }
 
@@ -24,18 +35,6 @@ public class ModifierManager : MonoBehaviour
         DeathGivesPoints,   // morir le da puntos al rival
         WinnerBonus         // el ganador se lleva bonus extra
     }
-
-    [Header("Modificador activo")]
-    public KOHModifier activeKOHModifier = KOHModifier.None;
-    public DodgeDiskModifier activeDDModifier = DodgeDiskModifier.None;
-
-    [Header("Valores configurables")]
-    public float comebackMultiplier = 3f;       // x3 para el que va perdiendo
-    public int pointBleedAmount = 1;            // puntos que se pierden por segundo
-    public int powerUpKillBonusPoints = 15;     // bonus por matar con power up
-    public int deathGivesPoints = 10;           // puntos que le das al rival al morir
-    public int winnerBonusPoints = 50;          // bonus al ganador al final
-
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }

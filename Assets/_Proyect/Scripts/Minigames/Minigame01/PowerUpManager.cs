@@ -85,6 +85,10 @@ public class PowerUpManager : MonoBehaviour
     // ACTIVATE
     private void ActivatePowerUp(int player)
     {
+        DodgeDisk dodgeDisk = FindFirstObjectByType<DodgeDisk>();
+        if (dodgeDisk != null)
+            dodgeDisk.NotifyPowerUpUsed(player);
+
         PowerUpType type = player == 1 ? player1PowerUp : player2PowerUp;
 
         // consumir el power up

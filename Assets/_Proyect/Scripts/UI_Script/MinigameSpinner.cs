@@ -17,6 +17,9 @@ public class MinigameSpinner : MonoBehaviour
     [Header("Secciones ya jugadas (X)")]
     [SerializeField] private GameObject[] playedOverlays;
 
+    [Header("Referencias")]
+    [SerializeField] private ModifiersSpinner modifiersSpinner;
+
     private Rigidbody2D rb;
     private bool hasSpun = false;
     private float stoppedTimer = 0f;
@@ -111,7 +114,7 @@ public class MinigameSpinner : MonoBehaviour
         }
         else
         {
-            Debug.Log($"Minijuego {winnerId} ya jugado -> corrigiendo hacia sección válida...");
+            Debug.Log($"Minijuego {winnerId} ya jugado  corrigiendo hacia sección válida...");
             MoveToNearestAvailable(rawAngle, available);
         }
     }
@@ -148,7 +151,7 @@ public class MinigameSpinner : MonoBehaviour
 
     private void ConfirmSelection()
     {
-        List<int> available = GameManager.Instance.GetAvailableMinigames(); //devuelve la lista de disponibles
+        List<int> available = GameManager.Instance.GetAvailableMinigames();
 
         float rawAngle = transform.rotation.eulerAngles.z;
         float normalizedAngle = (rawAngle + 90f) % 360f;
@@ -158,15 +161,14 @@ public class MinigameSpinner : MonoBehaviour
         sectionIndex = Mathf.Clamp(sectionIndex, 0, totalMinigames - 1);
         int winnerId = sectionIndex + 1;
 
-        Debug.Log("Confirmado: Minijuego {winnerId}");
+        Debug.Log($"Confirmado: Minijuego {winnerId}");
         RefreshOverlays();
-        if (GameManager.Instance.IsGameOver())
-        {
-            SceneLoader.Instance.LoadFinalScreen();
-        }
-        else{
-            SceneLoader.Instance.LoadMinigame(winnerId); //se elige el minijuego si currentRound < TOTAL_ROUNDS
-        }       
+
+        // Guardar qué minijuego tocó para que ModifiersSpinner lo lea
+        PlayerPrefs.SetInt("SelectedMinigame", winnerId);
+
+        // Ir a la ruleta de modificadores
+        SceneLoader.Instance.LoadSelectModifier();
     }
 
     private void RefreshOverlays()
