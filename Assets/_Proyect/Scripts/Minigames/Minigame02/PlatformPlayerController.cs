@@ -82,7 +82,7 @@ public class PlatformPlayerController : MonoBehaviour
     [Header("PowerUp")]
     [SerializeField] private PowerUpPickup.PowerUpType currentPowerUp;
     [SerializeField] private bool hasPowerUp = false;
-
+    private Animator animator;
     private Rigidbody2D rb;
     private SpriteRenderer sr;
     private Collider2D col;
@@ -101,6 +101,7 @@ public class PlatformPlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         sr = GetComponent<SpriteRenderer>();
         col = GetComponent<Collider2D>();
+        animator = GetComponent<Animator>();
     }
 
     private void OnEnable() { SetupInput(); }
@@ -139,10 +140,17 @@ public class PlatformPlayerController : MonoBehaviour
     {
         if (isDead) return;
         if (moveAction == null) return;
-
         moveInput = moveAction.ReadValue<Vector2>();
         CheckGround();
 
+        // ESTO tiene que estar acá
+        if (animator != null)
+        {
+            animator.SetFloat("velocityX", Mathf.Abs(moveInput.x));
+            animator.SetFloat("velocityY", rb.linearVelocity.y);
+            animator.SetBool("isGrounded", isGrounded);
+        }
+        Debug.Log($"Animator OK | velX: {Mathf.Abs(moveInput.x)} | grounded: {isGrounded}");
         if (invertControls) moveInput = -moveInput;
 
         if (isGrounded)
@@ -163,11 +171,23 @@ public class PlatformPlayerController : MonoBehaviour
             if (isGrounded || coyoteTimeCounter > 0f) ExecuteJump();
         }
 
+
         if (mirrorJumpPending)
         {
             mirrorJumpPending = false;
             StartCoroutine(MirrorJumpCoroutine());
+
+            // si toca el suelo dentro del buffer, salta
+            if (isGrounded || coyoteTimeCounter > 0f)
+                ExecuteJump();
+
+           
+
         }
+        if (moveInput.x > 0.01f) sr.flipX = false;
+        else if (moveInput.x < -0.01f) sr.flipX = true;
+
+          
     }
 
     private void FixedUpdate()
