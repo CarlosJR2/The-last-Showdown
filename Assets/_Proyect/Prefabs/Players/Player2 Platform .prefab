@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 3732607951623789684}
   - component: {fileID: 569843239741352115}
   - component: {fileID: 2193797284578817671}
+  - component: {fileID: 6580697724506949206}
   m_Layer: 0
   m_Name: 'Player2 Platform '
   m_TagString: Player2
@@ -30,8 +31,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -1.4184328, y: 0.4963091, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.74999994, y: 0.74999994, z: 0.74999994}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2869724898644851137}
   m_Father: {fileID: 0}
@@ -80,8 +81,8 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Sprite: {fileID: 8793639957104055765, guid: 516e469386d8b114aa6e53ffb2427b26, type: 3}
+  m_Color: {r: 1, g: 0.90395224, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -103,31 +104,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab2e008d709bcb74981f12dabf5a8366, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 5
+  moveSpeed: 9
   gravityScale: 3
-  jumpForce: 10
+  jumpForce: 15
   jumpCutMultiplier: 0.4
-  fallMultiplier: 2.5
-  coyoteTime: 0.15
-  jumpBufferTime: 0.1
+  fallMultiplier: 4.5
+  coyoteTime: 0.7
+  jumpBufferTime: 0.5
   groundCheckDistance: 0.4
   groundLayer:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 1280
   knockbackForce: 12
   selfKnockback: 4
-  attackRange: 1.2
+  attackRange: 3
   attackCooldown: 0.5
   hasDNA: 0
   respawnDelay: 2
   invulnerableTime: 2
-  inputActions: {fileID: 0}
-  actionMapName: Player1_Platform
+  inputActions: {fileID: -944628639613478452, guid: 2eefc3655699b6b4c94338e68a1d94bb, type: 3}
+  actionMapName: Player2_Platform
   isGrounded: 0
   isInvulnerable: 0
-  isDead: 1
+  isDead: 0
   canAttack: 1
   isKnockedBack: 0
+  currentPowerUp: 0
+  hasPowerUp: 0
 --- !u!50 &569843239741352115
 Rigidbody2D:
   serializedVersion: 5
@@ -189,18 +192,40 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: -0.072128296, y: -0.050489426}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
+    oldSize: {x: 2.56, y: 2.55}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 1.7789841, y: 1.8511086}
   m_EdgeRadius: 0
+--- !u!95 &6580697724506949206
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1929242598546552070}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 1f64f867a3858d54eb038aabd18e7be9, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &7196381450849927680
 GameObject:
   m_ObjectHideFlags: 0
@@ -227,7 +252,7 @@ Transform:
   m_GameObject: {fileID: 7196381450849927680}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.04, y: 0.41, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -267,7 +292,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.000000029802322, y: 0.44616112}
+  m_Offset: {x: -0.056715995, y: 0.44616112}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -277,5 +302,5 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.9543862, y: 0.10767776}
+  m_Size: {x: 1.8432467, y: 0.10767776}
   m_EdgeRadius: 0

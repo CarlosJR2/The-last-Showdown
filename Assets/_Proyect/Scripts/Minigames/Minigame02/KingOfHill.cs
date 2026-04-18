@@ -35,6 +35,8 @@ public class KingOfHill : MonoBehaviour
     [SerializeField] private TextMeshProUGUI player1ScoreText;
     [SerializeField] private TextMeshProUGUI player2ScoreText;
     [SerializeField] private Image flashImage;
+    [SerializeField] private PowerUpHUD hudPlayer1;
+    [SerializeField] private PowerUpHUD hudPlayer2;
 
     [Header("Debug")]
     [SerializeField] private int currentZoneIndex = 0;
@@ -95,6 +97,8 @@ public class KingOfHill : MonoBehaviour
         // zona ya elegida en Start, solo activar
         ActivateZone(currentZoneIndex, teleport: false);
 
+        hudPlayer1?.TrackPlayer(p1Controller);
+        hudPlayer2?.TrackPlayer(p2Controller);
         UpdateUI();
     }
 

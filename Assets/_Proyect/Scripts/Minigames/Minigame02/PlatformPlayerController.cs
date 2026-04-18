@@ -150,7 +150,7 @@ public class PlatformPlayerController : MonoBehaviour
             animator.SetFloat("velocityY", rb.linearVelocity.y);
             animator.SetBool("isGrounded", isGrounded);
         }
-        Debug.Log($"Animator OK | velX: {Mathf.Abs(moveInput.x)} | grounded: {isGrounded}");
+        
         if (invertControls) moveInput = -moveInput;
 
         if (isGrounded)
@@ -265,7 +265,22 @@ public class PlatformPlayerController : MonoBehaviour
 
     private void OnAttack(InputAction.CallbackContext context)
     {
+     
+      
+
         if (isDead || !canAttack || otherPlayer == null) return;
+        float dist = Vector2.Distance(transform.position, otherPlayer.transform.position);
+        Debug.Log($"Distancia al rival: {dist} | attackRange: {attackRange}");
+        if (dist <= attackRange)
+        {
+            animator.SetTrigger("Attack");
+            StartCoroutine(KnockbackDuration());
+            StartCoroutine(AttackCooldown());
+        }
+    }
+    public void ApplyAttackHit()
+    {
+        if (otherPlayer == null) return;
         float dist = Vector2.Distance(transform.position, otherPlayer.transform.position);
         if (dist <= attackRange)
         {
@@ -274,14 +289,13 @@ public class PlatformPlayerController : MonoBehaviour
             otherPlayer.ReceiveKnockback(knockDir);
             rb.linearVelocity = new Vector2(-dirX * selfKnockback, selfKnockback * 0.3f);
             StartCoroutine(KnockbackDuration());
-            StartCoroutine(AttackCooldown());
         }
     }
-
     public void ReceiveKnockback(Vector2 direction)
     {
         if (isInvulnerable) return;
         if (shieldActive) { otherPlayer.ReceiveKnockback(-direction * shieldMultiplier); return; }
+        animator?.SetTrigger("Hurt"); // <-- agregar esto
         rb.linearVelocity = direction * knockbackForce;
         StartCoroutine(KnockbackDuration());
     }
@@ -380,7 +394,7 @@ public class PlatformPlayerController : MonoBehaviour
     }
 
     public bool HasPowerUp() => hasPowerUp;
-
+    public PowerUpPickup.PowerUpType GetCurrentPowerUp() => currentPowerUp;
     public void ReceivePowerUp(PowerUpPickup.PowerUpType type)
     {
         currentPowerUp = type;

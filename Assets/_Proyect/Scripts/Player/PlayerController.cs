@@ -32,6 +32,7 @@ public class PlayerController : MonoBehaviour
     private InputAction moveAction;
     private InputAction jumpAction;
     private InputAction interactAction;
+    
 
     public enum MovementMode { Platform, TopDown } //se definen dos estados de juego, estilo plataformero o top down
 
@@ -70,6 +71,8 @@ public class PlayerController : MonoBehaviour
         moveInput = moveAction.ReadValue<Vector2>(); //devuelve algo como: (1, 0), (-1, 0), (0, 1), (0, -1)
 
         UpdateAnimations(moveInput);
+        anim.SetFloat("lastDirX", lastDirection.x);
+        anim.SetFloat("lastDirY", lastDirection.y);
     }
 
     private void FixedUpdate() //se fija que modo de input se esta usando
