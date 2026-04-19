@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 
 public class PowerUpManager : MonoBehaviour
@@ -28,6 +28,10 @@ public class PowerUpManager : MonoBehaviour
     [SerializeField] private bool wallActive;
     [SerializeField] private bool magnetActive;
 
+    [Header("HUD")]
+    [SerializeField] private PowerUpHUDMinigame1 player1HUD;
+    [SerializeField] private PowerUpHUDMinigame1 player2HUD;
+
     private GameObject activeWall;
     private PlayerController player1Controller;
     private PlayerController player2Controller;
@@ -55,10 +59,13 @@ public class PowerUpManager : MonoBehaviour
     // PICKUP 
     public void OnPlayerPickup(int player) //se llama en el trigger del PowerUpMovement, y se le para 1 o 2
     {
+
         if (player == 1 && !player1HasPowerUp) //chequea que player es (1 o 2) y si tiene ya un power-up o no
         {
             player1PowerUp = GetRandomPowerUp(); //se otorga un power-up de forma random
             player1HasPowerUp = true; //TRUE tiene un power-up
+
+            player1HUD?.ShowIcon(1, player1PowerUp);
             powerUpPickup.gameObject.SetActive(false); //se desactiva
             Invoke(nameof(RespawnPickup), 2f); //se llama a la funcion RespawnPickup, que lo activa de nuevo en un lugar random
         }
@@ -66,6 +73,7 @@ public class PowerUpManager : MonoBehaviour
         {
             player2PowerUp = GetRandomPowerUp();
             player2HasPowerUp = true;
+            player2HUD?.ShowIcon(2, player2PowerUp);
             powerUpPickup.gameObject.SetActive(false);
             Invoke(nameof(RespawnPickup), 2f);
         }
@@ -92,9 +100,18 @@ public class PowerUpManager : MonoBehaviour
         PowerUpType type = player == 1 ? player1PowerUp : player2PowerUp;
 
         // consumir el power up
-        if (player == 1) player1HasPowerUp = false; // ya no tiene el power-up
-        else player2HasPowerUp = false;
+        if (player == 1)
+        {
+            player1HasPowerUp = false;
+                player1HUD?.HideIcon(1);
 
+        }  
+        // ya no tiene el power-up
+        else
+        {
+            player2HasPowerUp = false;
+            player2HUD?.HideIcon(2);
+        }
         int opponent = player == 1 ? 2 : 1; //determina quien es el oponente
 
         switch (type) //se evaluan los casos y se ejecutan
@@ -129,7 +146,7 @@ public class PowerUpManager : MonoBehaviour
     }
 
     // FREEZE 
-    private IEnumerator ActivateFreeze(int opponent) //IEnumerator permite l�gica en el tiempo
+    private IEnumerator ActivateFreeze(int opponent) //IEnumerator permite lógica en el tiempo
     {
         PlayerController opponentController = opponent == 1 ? player1Controller : player2Controller;
 

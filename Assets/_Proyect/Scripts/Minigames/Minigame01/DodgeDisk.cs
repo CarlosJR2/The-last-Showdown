@@ -34,6 +34,12 @@
         [SerializeField] private float invulnTimer2;
         [SerializeField] private bool gameRunning;
 
+    [Header("Death")]
+    [SerializeField] private Animator player1Animator;
+    [SerializeField] private Animator player2Animator;
+    [SerializeField] private float deathAnimDuration = 0.4f;
+    
+    
         private bool player1UsedPowerUp = false;
         private bool player2UsedPowerUp = false;
         private float powerUpKillTimer1 = 0f;
@@ -104,27 +110,53 @@
             }
         }
 
-        private void RespawnPlayer(int player)
+    private void RespawnPlayer(int player)
+    {
+        if (player == 1)
         {
-            if (player == 1)
-            {
-                player1.transform.position = player1SpawnPoint.position;
-                player1Invulnerable = true;
-                invulnTimer1 = invulnerableTime;
-                Physics2D.IgnoreCollision(diskCollider, player1Collider, true);
-                StartCoroutine(FlashPlayer(player1));
-            }
-            else
-            {
-                player2.transform.position = player2SpawnPoint.position;
-                player2Invulnerable = true;
-                invulnTimer2 = invulnerableTime;
-                Physics2D.IgnoreCollision(diskCollider, player2Collider, true);
-                StartCoroutine(FlashPlayer(player2));
-            }
+            player1Invulnerable = true;
+            invulnTimer1 = invulnerableTime;
+            Physics2D.IgnoreCollision(diskCollider, player1Collider, true);
+            StartCoroutine(DeathSequence(
+                player1, player1Animator,
+                player1SpawnPoint, player1Collider));
         }
+        else
+        {
+            player2Invulnerable = true;
+            invulnTimer2 = invulnerableTime;
+            Physics2D.IgnoreCollision(diskCollider, player2Collider, true);
+            StartCoroutine(DeathSequence(
+                player2, player2Animator,
+                player2SpawnPoint, player2Collider));
+        }
+    }
 
-        private void GivePointsToBothPlayers()
+    private IEnumerator DeathSequence(GameObject player, Animator anim,
+        Transform spawnPoint, Collider2D col)
+    {
+        // congelar y deshabilitar colision
+        PlayerController controller = player.GetComponent<PlayerController>();
+        controller.SetFrozen(true);
+        col.enabled = false;
+
+        // animacion de muerte
+        anim.SetTrigger("Die");
+        yield return new WaitForSeconds(deathAnimDuration);
+
+        // teletransportar
+        player.transform.position = spawnPoint.position;
+
+
+        // rehabilitar
+        col.enabled = true;
+        controller.SetFrozen(false);
+
+        // flash de invulnerabilidad
+        yield return StartCoroutine(FlashPlayer(player));
+    }
+
+    private void GivePointsToBothPlayers()
         {
             GameManager.Instance.AddResult(1, true);
             GameManager.Instance.AddResult(2, true);

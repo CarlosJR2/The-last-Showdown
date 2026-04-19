@@ -71,8 +71,7 @@ public class PlayerController : MonoBehaviour
         moveInput = moveAction.ReadValue<Vector2>(); //devuelve algo como: (1, 0), (-1, 0), (0, 1), (0, -1)
 
         UpdateAnimations(moveInput);
-        anim.SetFloat("lastDirX", lastDirection.x);
-        anim.SetFloat("lastDirY", lastDirection.y);
+
     }
 
     private void FixedUpdate() //se fija que modo de input se esta usando
