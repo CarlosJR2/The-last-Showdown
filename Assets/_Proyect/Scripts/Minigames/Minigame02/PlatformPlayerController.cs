@@ -348,14 +348,18 @@ public class PlatformPlayerController : MonoBehaviour
 
     private IEnumerator Die()
     {
+  
         isDead = true;
         isKnockedBack = false;
         rb.linearVelocity = Vector2.zero;
         rb.gravityScale = 0f;
-        sr.enabled = false;
+      
+        animator.SetTrigger("Die");
         yield return new WaitForSeconds(respawnDelay);
+        sr.enabled = false;
         transform.position = spawnPoint;
         rb.gravityScale = gravityScale;
+        yield return new WaitForSeconds(0.1f);
         sr.enabled = true;
         isDead = false;
         StartCoroutine(Invulnerable());
