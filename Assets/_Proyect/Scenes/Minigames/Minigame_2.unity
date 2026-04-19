@@ -1078,8 +1078,8 @@ Camera:
   m_GameObject: {fileID: 290505919}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0.3773585, g: 0.087219656, b: 0.12808408, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -91256,8 +91256,8 @@ Tilemap:
   - first: {x: -21, y: -48, z: 0}
     second:
       serializedVersion: 2
-      m_TileIndex: 2
-      m_TileSpriteIndex: 2
+      m_TileIndex: 0
+      m_TileSpriteIndex: 0
       m_TileMatrixIndex: 0
       m_TileColorIndex: 0
       m_TileObjectToInstantiateIndex: 65535
@@ -94285,18 +94285,18 @@ Tilemap:
       m_AllTileFlags: 1073741825
   m_AnimatedTiles: {}
   m_TileAssetArray:
-  - m_RefCount: 17
+  - m_RefCount: 18
     m_Data: {fileID: 11400000, guid: ad7fe38bb43925d4994449a5441a1b9d, type: 2}
   - m_RefCount: 10
     m_Data: {fileID: 11400000, guid: b1de22b62ec79014faf0a1d7a996c34e, type: 2}
-  - m_RefCount: 318
+  - m_RefCount: 317
     m_Data: {fileID: 11400000, guid: 2341bdc89e7c7844aa755a7e4d41cd75, type: 2}
   m_TileSpriteArray:
-  - m_RefCount: 17
+  - m_RefCount: 18
     m_Data: {fileID: 2029405532, guid: d50a5ceb35df96341909db9a97583c83, type: 3}
   - m_RefCount: 10
     m_Data: {fileID: 126278185, guid: d50a5ceb35df96341909db9a97583c83, type: 3}
-  - m_RefCount: 318
+  - m_RefCount: 317
     m_Data: {fileID: 1372511342, guid: d50a5ceb35df96341909db9a97583c83, type: 3}
   m_TileMatrixArray:
   - m_RefCount: 180
@@ -95042,8 +95042,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 178.43958, y: -25}
-  m_SizeDelta: {x: 356.8792, y: 50}
+  m_AnchoredPosition: {x: 217.19464, y: -25}
+  m_SizeDelta: {x: 434.3893, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1269274039
 MonoBehaviour:
@@ -95871,8 +95871,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -211.64478, y: -25}
-  m_SizeDelta: {x: 423.2896, y: 50}
+  m_AnchoredPosition: {x: -243.1333, y: -25}
+  m_SizeDelta: {x: 486.2668, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1459512115
 MonoBehaviour:
@@ -125738,7 +125738,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1736883758
 RectTransform:
   m_ObjectHideFlags: 0
