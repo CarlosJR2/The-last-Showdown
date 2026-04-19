@@ -17,7 +17,7 @@ public class PowerUpHUDMinigame1 : MonoBehaviour
         player2Icon.gameObject.SetActive(false);
     }
     
-   public void HideIcon(int player, PowerUpManager.PowerUpType type)
+   public void ShowIcon(int player, PowerUpManager.PowerUpType type)
     {
         Image icon = player == 1 ? player1Icon : player2Icon;
         icon.sprite = powerUpIcons[(int)type];
